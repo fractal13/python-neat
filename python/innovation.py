@@ -19,15 +19,15 @@ class Innovation:
 
     def __init__(self, nin, nout, num1):
         self.innovation_type = Innovation.NEWNODE  # Either NEWNODE or NEWLINK
-        self.node_in_id = nin                      # Nodes where innovation occurred
+        self.node_in_id = nin                      # int, Nodes where innovation occurred
         self.node_out_id = nout
-        self.innovation_num1 = num1                # Innovation's assigned number
-        self.innovation_num2 = 0.                  # NEWNODEs need 2 innovations
-        self.new_weight = 0.                       # NEWLINKs need a weight
-        self.new_traitnum = 0                      # NEWLINKs need a connected trait
-        self.newnode_id = 0                        # NEWNODE's node_id
-        self.old_innov_num = 0                     # NEWNODE's gene's link's innovation number
-        self.recur_flag = False                    # ??
+        self.innovation_num1 = num1                # float, Innovation's assigned number
+        self.innovation_num2 = 0.                  # float, NEWNODEs need 2 innovations
+        self.new_weight = 0.                       # float, NEWLINKs need a weight
+        self.new_traitnum = 0                      # int, NEWLINKs need a connected trait
+        self.newnode_id = 0                        # int, NEWNODE's node_id
+        self.old_innov_num = 0.                    # float, NEWNODE's gene's link's innovation number
+        self.recur_flag = False                    # bool, ??
         return
 
     def SetNewNode(self, num2, newid, oldinnov):

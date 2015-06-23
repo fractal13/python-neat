@@ -53,7 +53,7 @@ class NNode:
         #self.xpos = ?
 
         self.node_id = 0
-        self.gen_node_label = None
+        self.gen_node_label = None  # HIDDEN, INPUT, OUTPUT, BIAS
         
         return
 
