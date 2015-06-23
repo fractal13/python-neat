@@ -4,7 +4,7 @@ Trait        - done
 Innovation   - done
 NNode        - done, except for tests
 Link         - done, except for tests
-Network
+Network      - done, except for tests
 Gene
 Genome
 Organism
