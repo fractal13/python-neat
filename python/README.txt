@@ -1,7 +1,7 @@
 Complete the classes in this order:
 
 Trait        - done
-Innovation
+Innovation   - done
 NNode
 Network
 Link

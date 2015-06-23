@@ -63,16 +63,40 @@ class Trait:
                     self. params[i] = 1.0
         return
 
+class TraitFromNine(Trait):
+    
+    def __init__(self, id, p1, p2, p3, p4, p5, p6, p7, p8, p9):
+        Trait.__init__(self)
+        self.SetFromNine(id, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+        return
+
+class TraitFromOther(Trait):
+
+    def __init__(self, other):
+        Trait.__init__(self)
+        self.SetFromOther(other)
+        return
+
+class TraitFromString(Trait):
+
+    def __init__(self, argline):
+        Trait.__init__(self)
+        self.SetFromString(argline)
+        return
+
+class TraitFromAverage(Trait):
+
+    def __init__(self, other1, other2):
+        Trait.__init__(self)
+        self.SetFromAverage(other1, other2)
+        return
+
     
 def main():
-    t = Trait()
-    u = Trait()
-    v = Trait()
-    w = Trait()
-    t.SetFromNine( 1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 )
-    u.SetFromString("2 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1")
-    v.SetFromOther(t)
-    w.SetFromAverage(t, u)
+    t = TraitFromNine( 1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 )
+    u = TraitFromString("2 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1")
+    v = TraitFromOther(t)
+    w = TraitFromAverage(t, u)
     fout = open("trait.txt", "wb")
     t.print_to_file(fout)
     u.print_to_file(fout)
