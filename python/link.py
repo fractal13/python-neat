@@ -21,7 +21,7 @@ class Link:
         self.is_recurrent = recur
         return
 
-    def SetFromTrait(self, lt, w, indoe, onode, recur):
+    def SetFromTrait(self, lt, w, inode, onode, recur):
         self.linktrait = lt
         self.weight = w
         self.in_node = inode
