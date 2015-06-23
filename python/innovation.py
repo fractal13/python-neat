@@ -1,19 +1,33 @@
 class Innovation:
+    """
+    // ------------------------------------------------------------
+    // This Innovation class serves as a way to record innovations
+    //   specifically, so that an innovation in one genome can be 
+    //   compared with other innovations in the same epoch, and if they
+    //   are the same innovation, they can both be assigned the same
+    //   innovation number.
+    //
+    //  This class can encode innovations that represent a new link
+    //  forming, or a new node being added.  In each case, two 
+    //  nodes fully specify the innovation and where it must have
+    //  occured.  (Between them)                                     
+    // ------------------------------------------------------------ 
+    """
 
     NEWNODE = 0
     NEWLINK = 1
 
     def __init__(self, nin, nout, num1):
-        self.innovation_type = Innovation.NEWNODE
-        self.node_in_id = nin
+        self.innovation_type = Innovation.NEWNODE  # Either NEWNODE or NEWLINK
+        self.node_in_id = nin                      # Nodes where innovation occurred
         self.node_out_id = nout
-        self.innovation_num1 = num1
-        self.innovation_num2 = 0.
-        self.new_weight = 0.
-        self.new_traitnum = 0
-        self.newnode_id = 0
-        self.old_innov_num = 0
-        self.recur_flag = False
+        self.innovation_num1 = num1                # Innovation's assigned number
+        self.innovation_num2 = 0.                  # NEWNODEs need 2 innovations
+        self.new_weight = 0.                       # NEWLINKs need a weight
+        self.new_traitnum = 0                      # NEWLINKs need a connected trait
+        self.newnode_id = 0                        # NEWNODE's node_id
+        self.old_innov_num = 0                     # NEWNODE's gene's link's innovation number
+        self.recur_flag = False                    # ??
         return
 
     def SetNewNode(self, num2, newid, oldinnov):
