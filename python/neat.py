@@ -3,7 +3,7 @@ import random, math
 num_trait_params = 8
 trait_param_mut_prob = 0.01
 trait_mutation_power = 0.01
-
+recur_only_prob = 0.0
 
 def randposneg():
     return random.choice( [ 1, -1 ] )
