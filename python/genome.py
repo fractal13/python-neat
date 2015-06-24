@@ -941,7 +941,82 @@ class Genome:
         #
 
     def mutate_add_sensor(self, innovs, curinnov):
-        ???
+        newweight = 0.0
+        sensors = []
+        outputs = []
+        for node in self.nodes:
+            if node.type == NNode.SENSOR:
+                sensors.append(node)
+            elif node.gen_node_label == NNode.OUTPUT:
+                outputs.append(node)
+
+        # eliminate any sensors that are already connected
+        # - This code doesn't seem to do what the comment says. - cgl
+        keep_sensors = []
+        for sensor in sensors:
+            outputConnections = 0
+            for genes in self.genes:
+                if gene.lnk.out_node.gen_node_label == NNode.OUTPUT:
+                    outputConnections += 1
+            if outputConnections != len(outputs):
+                keep_sensors.append(sensor)
+        sensors = keep_sensors
+
+        if len(sensors) == 0:
+            return
+        #
+
+        sensor = random.choice(sensors)
+
+        for output in outputs:
+            found = False
+            for gene in genes:
+                if gene.lnk.in_node == sensor and gene.lnk.out_node == output:
+                    found = True
+                    break
+            #
+            if found:
+                innov_i = 0
+                done = False
+
+                while not done:
+                    if innov_i < len(innovs):
+                        theinnov = innovs[innov_i]
+                        
+                    if innov_i >= len(innovs):
+                        traitnum = neat.randint(0, len(self.traits)-1)
+                        thetrait = self.traits[traitnum]
+
+                        newweight = neat.randposneg() * neat.randfloat() * 3.0
+
+                        newgene = Gene()
+                        newgene.SetFromValues(thetrait, newweight, sensor, output, False, curinnov[0], newweight)
+
+                        innov = Innovation(sensor.node_id, output.node_id, curinnov[0])
+                        innov.SetNewLink(newweight, traitnum)
+                        innovs.append(innov)
+                        
+                        curinnov[0] += 1.0
+                        
+                        done = True
+                        
+                    elif ((theinnov.innovation_type == Innovation.NEWLINK) and
+                          (theinnov.node_in_id == sensor.node_id) and
+                          (theinnov.node_out_id == output.node_id) and
+                          (theinnov.recur_flag == False)):
+                        thetrait = self.traits[theinnov.new_traitnum]
+                        newgene = Gene()
+                        newgene.SetFromTraitAndValues(thetrait, theinnov.new_weight,
+                                                      sensor, output, False, theinnov.innovation_num1, 0.0)
+                        done = True
+                    else:
+                        innov_i += 1
+                        #
+                    # while not done
+                self.add_gene(self.genes, newgene)
+                # if found
+            # for output
+        # def mutate_add_sensor
         return
         
     ##// ****** MATING METHODS ***** 
@@ -954,6 +1029,47 @@ class Genome:
     ##//   Interspecies mating leads to all genes being inherited.
     ##//   Otherwise, excess genes come from most fit parent.
     def mate_multipoint(self, g, genomeid, fitness1, fitness2, interspec_flag):
+        disable = False
+
+        # Baby's traits
+        newtraits = []
+        for i in range(len(self.traits)):
+            newtrait = Trait()
+            newtrait.SetFromAverage(self.traits[i], g.traits[i])
+            newtraits.append(newtrait)
+
+        # Best Genome?
+        if fitness1 > fitness2:
+            p1better = True
+        elif fitness1 == fitness2:
+            if len(self.genes) < len(g.genes):
+                p1better = True
+            else:
+                p1better = False
+        else:
+            p1better = False
+
+            
+        # Copy all sensors and outputs
+        newnodes = []
+        for curnode in g.nodes:
+            if ((curnode.gen_node_label == NNode.INPUT) or
+                (curnode.gen_node_label == NNode.BIAS) or
+                (curnode.gen_node_label == NNode.OUTPUT)):
+                if curnode.nodetrait is None:
+                    nodetraitnum = 0
+                else:
+                    nodetraitnum = curnode.nodetrait.trait_id - self.traits[0].trait_id
+
+                new_onode = NNode()
+                new_onode.SetFromNNodeAndTrait(curnode, newtraits[nodetraitnum])
+                node_insert(newnodes, new_onode)
+                #
+
+        # Walk through genes of both parents until both genomes reach an end
+
+        #
+        # def mate_multipoint
         ???
         return
 
@@ -1002,13 +1118,29 @@ class Genome:
         
     ##//Inserts a NNode into a given ordered list of NNodes in order
     def node_insert(self, nlist, n):
-        ???
+        nid = n.node_id
+        for i in range(len(nlist)):
+            curnode = nlist[i]
+            if curnode.node_id >= inum:
+                # found its place
+                nlist.insert(i, n)
+                return
+        # goes at the end
+        nlist.append(n)
         return
 
     ##//Adds a new gene that has been created through a mutation in the
     ##//*correct order* into the list of genes in the genome
     def add_gene(self, glist, g):
-        ???
+        inum = g.innovation_num
+        for i in range(len(glist)):
+            curgene = glist[i]
+            if curgene.innovation_num >= inum:
+                # found its place
+                glist.insert(i, g)
+                return
+        # goes at the end
+        glist.append(g)
         return
 
     def get_last_node_id(self):
