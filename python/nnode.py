@@ -70,7 +70,7 @@ class NNode:
         return
         
 
-    def SetFromNNodeAndTrait(n, t):
+    def SetFromNNodeAndTrait(self, n, t):
         self.type = n.type
 	self.node_id = n.node_id
 	self.gen_node_label = n.gen_node_label
@@ -79,7 +79,7 @@ class NNode:
             self.trait_id = t.trait_id
         return
 
-    def SetFromStringAndTraits(argline, traits):
+    def SetFromStringAndTraits(self, argline, traits):
         parts = argline.split()
         self.node_id = int(parts[0])
         traitnum = int(parts[1])
@@ -94,7 +94,7 @@ class NNode:
         return
         
 
-    def SetFromNNode(nnode):
+    def SetFromNNode(self, nnode):
 	self.active_flag = nnode.active_flag
 	self.activesum = nnode.activesum
 	self.activation = nnode.activation
