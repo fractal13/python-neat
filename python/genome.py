@@ -1029,8 +1029,6 @@ class Genome:
     ##//   Interspecies mating leads to all genes being inherited.
     ##//   Otherwise, excess genes come from most fit parent.
     def mate_multipoint(self, g, genomeid, fitness1, fitness2, interspec_flag):
-        disable = False
-
         # Baby's traits
         newtraits = []
         for i in range(len(self.traits)):
@@ -1038,7 +1036,7 @@ class Genome:
             newtrait.SetFromAverage(self.traits[i], g.traits[i])
             newtraits.append(newtrait)
 
-        # Best Genome?
+        # Identify Best Genome
         if fitness1 > fitness2:
             p1better = True
         elif fitness1 == fitness2:
@@ -1051,6 +1049,7 @@ class Genome:
 
             
         # Copy all sensors and outputs
+        # Baby's nodes
         newnodes = []
         for curnode in g.nodes:
             if ((curnode.gen_node_label == NNode.INPUT) or
@@ -1063,22 +1062,441 @@ class Genome:
 
                 new_onode = NNode()
                 new_onode.SetFromNNodeAndTrait(curnode, newtraits[nodetraitnum])
-                node_insert(newnodes, new_onode)
+                self.node_insert(newnodes, new_onode)
                 #
 
-        # Walk through genes of both parents until both genomes reach an end
+        # Baby's genes
+        newgenes = []
+        disable = False
 
+        # Walk through genes of both parents until both genomes reach an end
+        p1_i = 0
+        p2_i = 0
+        while p1_i < len(self.genes) or p2_i < len(g.genes):
+
+            # choose between next gene of each parent
+            skip = False
+            if p1_i == len(self.genes):
+                chosengene = g.genes[p2_i]
+                p2_i += 1
+                if p1better:
+                    skip = True
+            elif p2_i == len(g.genes):
+                chosengene = self.genes[p1_i]
+                p1_i += 1
+                if not p1better:
+                    skip = True
+            else:
+                p1innov = self.genes[p1_i].innovation_num
+                p2innov = g.genes[p2_i].innovation_num
+
+                
+                if p1innov == p2innov:
+                    # same innovation number, randomly chose one
+                    if neat.randfloat() < 0.5:
+                        chosengene = self.genes[p1_i]
+                    else:
+                        chosengene = g.genes[p2_i]
+
+                    # if either parent has gene disabled, the offspring likely has it disabled too
+                    if (not self.genes[p1_i].enable) or (not g.genes[p2_i]):
+                        if neat.randfloat() < 0.75:
+                            disable = True
+                    p1_i += 1
+                    p2_i += 1
+
+                elif p1innov < p2innov:
+                    # p1 is earlier, choose it
+                    chosengene = self.genes[p1_i]
+                    p1_i += 1
+                    if not p1better:
+                        skip = True
+
+                elif p2innov < p1innov:
+                    # p2 is earlier, choose it
+                    chosengene = g.genes[p2_i]
+                    p2_i += 1;
+                    if p1better:
+                        skip = True
+
+                else:
+                    # error
+                    print "THIS SHOULD NEVER HAPPEN"
+                    skip = True
+                        
+                #
+                # neither genome has run out yet.
+                #
+
+            # check if chosen gene represents the same link as another already chosen gene
+            new_i = 0
+            while ((new_i < len(newgenes)) and
+                   (not ((newgenes[new_i].lnk.in_node.node_id == chosengene.lnk.in_node.node_id) and
+                         (newgenes[new_i].lnk.out_node.node_id  == chosengene.lnk.out_node.node_id) and
+                         (newgenes[new_i].lnk.is_recurrent == chosengene.lnk.is_recurrent) )) and
+                   (not ((newgenes[new_i].lnk.in_node.node_id == chosengene.lnk.out_node.node_id) and
+                         (newgenes[new_i].lnk.out_node.node_id == chosengene.lnk.in_node.node_id) and
+                         (not newgenes[new_i].lnk.is_recurrent) and
+                         (not chosengene.lnk.is_recurrent) ))):
+                new_i += 1
+            if new_i < len(newgenes):
+                skip = True # is a duplicate
+
+
+            # gene needs to be added
+            if not skip:
+
+                # get the trait to use
+                if chosengene.lnk.linktrait is None:
+                    traitnum = self.traits[0].trait_id - 1
+                else:
+                    traitnum = chosengene.lnk.linktrait.trait_id - self.traits[0].trait_id
+
+                # get the nodes
+                inode = chosengene.lnk.in_node
+                onode = chosengene.lnk.out_node
+
+                if inode.node_id < onode.node_id:
+                    # inode is first
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != inode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # inode doesn't exist in newnodes, must create it
+                        if inode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = inode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_inode = NNode()
+                        new_inode.SetFromNNodeAndTrait(inode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_inode)
+                    else:
+                        # inode already exists in newnodes
+                        new_inode = newnodes[curnode_i]
+
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != onode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # onode doesn't exist in newnodes, must create it
+                        if onode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_oinode = NNode()
+                        new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_onode)
+                    else:
+                        # onode already exists in newnodes
+                        new_onode = newnodes[curnode_i]
+                else:
+                    # onode is first
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != onode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # onode doesn't exist in newnodes, must create it
+                        if onode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_oinode = NNode()
+                        new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_onode)
+                    else:
+                        # onode already exists in newnodes
+                        new_onode = newnodes[curnode_i]
+
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != inode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # inode doesn't exist in newnodes, must create it
+                        if inode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = inode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_inode = NNode()
+                        new_inode.SetFromNNodeAndTrait(inode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_inode)
+                    else:
+                        # inode already exists in newnodes
+                        new_inode = newnodes[curnode_i]
+
+                newgene = Gene()
+                newgene.SetFromGeneAndValues(chosengene, newtraits[traitnum], new_inode, new_onode)
+                if disable:
+                    newgene.enable = False
+                    disable = False
+                newgenes.append(newgene)
+                # not skipping
+            #
+            # loop over both parents genes
+            #
+
+        new_genome = Genome()
+        new_genome.SetFromSpecs(genomeid, newtraits, newnodes, newgenes)
+        return new_genome
         #
         # def mate_multipoint
-        ???
-        return
+
 
     ##//This method mates like multipoint but instead of selecting one
     ##//   or the other when the innovation numbers match, it averages their
     ##//   weights 
     def mate_multipoint_avg(self, g, genomeid, fitness1, fitness2, interspec_flag):
-        ???
-        return
+        
+        # Identify Best Genome
+        if fitness1 > fitness2:
+            p1better = True
+        elif fitness1 == fitness2:
+            if len(self.genes) < len(g.genes):
+                p1better = True
+            else:
+                p1better = False
+        else:
+            p1better = False
+
+        # Baby's traits
+        newtraits = []
+        for i in range(len(self.traits)):
+            newtrait = Trait()
+            newtrait.SetFromAverage(self.traits[i], g.traits[i])
+            newtraits.append(newtrait)
+
+            
+        # Copy all sensors and outputs
+        # Baby's nodes
+        newnodes = []
+        for curnode in g.nodes:
+            if ((curnode.gen_node_label == NNode.INPUT) or
+                (curnode.gen_node_label == NNode.BIAS) or
+                (curnode.gen_node_label == NNode.OUTPUT)):
+                if curnode.nodetrait is None:
+                    nodetraitnum = 0
+                else:
+                    nodetraitnum = curnode.nodetrait.trait_id - self.traits[0].trait_id
+
+                new_onode = NNode()
+                new_onode.SetFromNNodeAndTrait(curnode, newtraits[nodetraitnum])
+                self.node_insert(newnodes, new_onode)
+                #
+        
+        # Baby's genes
+        newgenes = []
+        avgene = Gene()
+        avgene.SetFromTraitAndValues(None, 0, None, None, False, 0, 0)
+
+        # Walk through genes of both parents until both genomes reach an end
+        p1_i = 0
+        p2_i = 0
+        while p1_i < len(self.genes) or p2_i < len(g.genes):
+
+            avgene.enable = True
+
+            # choose between next gene of each parent
+            skip = False
+            if p1_i == len(self.genes):
+                chosengene = g.genes[p2_i]
+                p2_i += 1
+                if p1better:
+                    skip = True
+            elif p2_i == len(g.genes):
+                chosengene = self.genes[p1_i]
+                p1_i += 1
+                if not p1better:
+                    skip = True
+            else:
+                p1innov = self.genes[p1_i].innovation_num
+                p2innov = g.genes[p2_i].innovation_num
+
+                
+                if p1innov == p2innov:
+                    # same innovation number, average the weights
+                    if neat.randfloat() > 0.5:
+                        avgene.lnk.linktrait = self.genes[p1_i].lnk.linktrait
+                    else:
+                        avgene.lnk.linktrait = g.genes[p2_i].lnk.linktrait
+                    avgene.lnk.weight = (self.genes[p1_i].lnk.weight + g.genes[p2_i].lnk.weight) / 2.0
+                    
+
+                    if neat.randfloat() > 0.5:
+                        avgene.lnk.in_node = self.genes[p1_i].lnk.in_node
+                    else:
+                        avgene.lnk.in_node = g.genes[p2_i].lnk.in_node
+
+                    if neat.randfloat() > 0.5:
+                        avgene.lnk.out_node = self.genes[p1_i].lnk.out_node
+                    else:
+                        avgene.lnk.out_node = g.genes[p2_i].lnk.out_node
+
+                    if neat.randfloat() > 0.5:
+                        avgene.lnk.is_recurrent = self.genes[p1_i].lnk.is_recurrent
+                    else:
+                        avgene.lnk.is_recurrent = g.genes[p2_i].lnk.is_recurrent
+
+                    avgene.innovation_num = self.genes[p1_i].innovation_num
+                    avgene.mutation_num = (self.genes[p1_i].mutation_num + g.genes[p2_i].mutation_num) / 2.0
+                    
+                    # if either parent has gene disabled, the offspring likely has it disabled too
+                    if (not self.genes[p1_i].enable) or (not g.genes[p2_i]):
+                        if neat.randfloat() < 0.75:
+                            avgene.enable = False
+
+                    chosengene = avgene
+                    p1_i += 1
+                    p2_i += 1
+
+                elif p1innov < p2innov:
+                    # p1 is earlier, choose it
+                    chosengene = self.genes[p1_i]
+                    p1_i += 1
+                    if not p1better:
+                        skip = True
+
+                elif p2innov < p1innov:
+                    # p2 is earlier, choose it
+                    chosengene = g.genes[p2_i]
+                    p2_i += 1;
+                    if p1better:
+                        skip = True
+
+                else:
+                    # error
+                    print "THIS SHOULD NEVER HAPPEN"
+                    skip = True
+                        
+                #
+                # neither genome has run out yet.
+                #
+
+            # check if chosen gene represents the same link as another already chosen gene
+            new_i = 0
+            while ((new_i < len(newgenes)) and
+                   (not ((newgenes[new_i].lnk.in_node.node_id == chosengene.lnk.in_node.node_id) and
+                         (newgenes[new_i].lnk.out_node.node_id  == chosengene.lnk.out_node.node_id) and
+                         (newgenes[new_i].lnk.is_recurrent == chosengene.lnk.is_recurrent) )) and
+                   (not ((newgenes[new_i].lnk.in_node.node_id == chosengene.lnk.out_node.node_id) and
+                         (newgenes[new_i].lnk.out_node.node_id == chosengene.lnk.in_node.node_id) and
+                         (not newgenes[new_i].lnk.is_recurrent) and
+                         (not chosengene.lnk.is_recurrent) ))):
+                new_i += 1
+            if new_i < len(newgenes):
+                skip = True # is a duplicate
+
+
+            # gene needs to be added
+            if not skip:
+
+                # get the trait to use
+                if chosengene.lnk.linktrait is None:
+                    traitnum = self.traits[0].trait_id - 1
+                else:
+                    traitnum = chosengene.lnk.linktrait.trait_id - self.traits[0].trait_id
+
+                # get the nodes
+                inode = chosengene.lnk.in_node
+                onode = chosengene.lnk.out_node
+
+                if inode.node_id < onode.node_id:
+                    # inode is first
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != inode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # inode doesn't exist in newnodes, must create it
+                        if inode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = inode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_inode = NNode()
+                        new_inode.SetFromNNodeAndTrait(inode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_inode)
+                    else:
+                        # inode already exists in newnodes
+                        new_inode = newnodes[curnode_i]
+
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != onode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # onode doesn't exist in newnodes, must create it
+                        if onode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_oinode = NNode()
+                        new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_onode)
+                    else:
+                        # onode already exists in newnodes
+                        new_onode = newnodes[curnode_i]
+                else:
+                    # onode is first
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != onode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # onode doesn't exist in newnodes, must create it
+                        if onode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_oinode = NNode()
+                        new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_onode)
+                    else:
+                        # onode already exists in newnodes
+                        new_onode = newnodes[curnode_i]
+
+                    curnode_i = 0
+                    while ( (curnode_i < len(newnodes)) and
+                            (newnodes[curnode_i].node_id != inode.node_id) ):
+                        curnode_i += 1
+                    if curnode_i >= len(newnodes):
+                        # inode doesn't exist in newnodes, must create it
+                        if inode.nodetrait is None:
+                            nodetraitnum = 0
+                        else:
+                            nodetraitnum = inode.nodetrait.trait_id - self.traits[0].trait_id
+
+                        new_inode = NNode()
+                        new_inode.SetFromNNodeAndTrait(inode, newtraits[nodetraitnum])
+                        self.node_insert(newnodes, new_inode)
+                    else:
+                        # inode already exists in newnodes
+                        new_inode = newnodes[curnode_i]
+
+                newgene = Gene()
+                newgene.SetFromGeneAndValues(chosengene, newtraits[traitnum], new_inode, new_onode)
+                if disable:
+                    newgene.enable = False
+                    disable = False
+                newgenes.append(newgene)
+                # not skipping
+            #
+            # loop over both parents genes
+            #
+
+        new_genome = Genome()nn
+        new_genome.SetFromSpecs(genomeid, newtraits, newnodes, newgenes)
+        return new_genome
+        #
+        # def mate_multipoint_avg
 
     ##// This method is similar to a standard single point CROSSOVER
     ##//   operator.  Traits are averaged as in the previous 2 mating
