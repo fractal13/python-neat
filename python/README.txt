@@ -6,7 +6,7 @@ NNode        - done, except for tests
 Link         - done, except for tests
 Network      - done, except for tests
 Gene         - done, except for tests
-Genome
-Organism
+Genome       - done, except for tests
+Organism     - done, except for tests
 Species
 Population
