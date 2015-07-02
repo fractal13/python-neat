@@ -106,6 +106,8 @@ class Organism:
 #// This is used for list sorting of Organisms by fitness..highest fitness first
 def order_orgs(x, y):
     return x.fitness > y.fitness
+def order_orgs_key(x):
+    return x.fitness
 
 def order_orgs_by_adjusted_fit(x, y):
     return x.fitness / len(x.species.organisms)  > y.fitness / len(y.species.organisms)
