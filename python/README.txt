@@ -9,4 +9,11 @@ Gene         - done, except for tests
 Genome       - done, except for tests
 Organism     - done, except for tests
 Species      - done, except for tests
-Population
+Population   - done, except for tests
+
+Untranslated files:
+experiements.cpp
+neat.cpp (partially)
+neatmain.cpp
+*.ne
+*genes*
