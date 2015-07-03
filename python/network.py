@@ -1,3 +1,7 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 from nnode import NNode
 import neat
 
@@ -17,6 +21,19 @@ class Network:
         self.adaptable = False # bool, can the network adapt?
         return
 
+    def __str__(self):
+        s = "Network[%d] numnodes:%d numlinks:%d all_nodes:%d input_iter:%d genotype:%s name:%s inputs:%d outputs:%d maxweight:%f adaptable:%s" \
+            % (self.net_id, self.numnodes, self.numlinks, len(self.all_nodes), self.input_iter,
+               str(self.genotype), self.name, len(self.inputs), len(self.outputs),
+               self.maxweight, str(self.adaptable))
+        return s
+
+    def verify(self):
+        if len(self.outputs) == 0:
+            dprint(DEBUG_INTEGRITY, "NO_OUTPUTS", str(self))
+            return False
+        return True
+        
     def SetFromLists(self, ins, outs, alls, netid, adaptval=False):
         self.inputs = ins
         self.outputs = outs
@@ -39,7 +56,7 @@ class Network:
         for curnode in other.outputs:
             n = NNode()
             n.SetFromNNode(curnode)
-            self.inputs.append(n)
+            self.outputs.append(n)
             self.all_nodes.append(n)
 
         self.name = other.name

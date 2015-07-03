@@ -1,3 +1,14 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
+from trait import Trait
+from nnode import NNode
+from gene import Gene
+from link import Link
+from network import Network
+from innovation import Innovation
+import neat
 
 class Genome:
     """
@@ -101,11 +112,13 @@ class Genome:
         done = 0
         
         words = fin.readline().strip().split()
+        dprint(DEBUG_FILEINPUT, "Genome.SetFromFile:words: ", " ".join(words))
         wordcount = len(words)
         curwordnum = 0
         while not done:
             if curwordnum > wordcount or wordcount == 0:
                 words = fin.readline().strip().split()
+                dprint(DEBUG_FILEINPUT, "Genome.SetFromFile:words: ", " ".join(words))
                 wordcount = len(words)
                 curwordnum = 0
             curword = words[curwordnum]
@@ -130,21 +143,21 @@ class Genome:
                     curword = words[curwordnum]
 
             elif curword == "trait":
-                argline = " ".join(words[wordcount+1:])
+                argline = " ".join(words[curwordnum+1:])
                 curwordnum = wordcount + 1
                 newtrait = Trait()
                 newtrait.SetFromString(argline)
                 self.traits.append(newtrait)
 
             elif curword == "node":
-                argline = " ".join(words[wordcount+1:])
+                argline = " ".join(words[curwordnum+1:])
                 curwordnum = wordcount + 1
                 newnode = NNode()
                 newnode.SetFromStringAndTraits(argline, self.traits)
                 self.nodes.append(newnode)
 
             elif curword == "gene":
-                argline = " ".join(words[wordcount+1:])
+                argline = " ".join(words[curwordnum+1:])
                 curwordnum = wordcount + 1
                 newgene = Gene()
                 newgene.SetFromString(argline, self.traits, self.nodes)
@@ -502,7 +515,7 @@ class Genome:
                         assoc_trait = curtrait
                         break
                         
-            newnode = Node()
+            newnode = NNode()
             newnode.SetFromNNodeAndTrait(curnode, assoc_trait)
             curnode.dup = newnode
             nodes_dup.append(newnode)
@@ -514,16 +527,16 @@ class Genome:
             inode = curgene.lnk.in_node.dup
             onode = curgene.lnk.out_node.dup
             # find trait
-            trait = curgene.lnk.linktrait
-            if trait is None:
+            traitptr = curgene.lnk.linktrait
+            if traitptr is None:
                 assoc_trait = None
             else:
                 assoc_trait = None
                 for curtrait in traits_dup:
-                    if curtrait.trait_id == curnode.nodetrait.trait_id:
+                    if curtrait.trait_id == traitptr.trait_id:
                         assoc_trait = curtrait
                         break
-            
+
             newgene = Gene()
             newgene.SetFromGeneAndValues(curgene, assoc_trait, inode, onode)
             genes_dup.append(newgene)
@@ -534,6 +547,20 @@ class Genome:
 
         return newgenome
 
+    # debug integrity of structure
+    def check_output_count_aux(self, nodelist):
+        count = 0
+        for curnode in nodelist:
+            if curnode.gen_node_label == NNode.OUTPUT:
+                count += 1
+        if count == 0:
+            raise Exception("output count is 0")
+            return False
+        return True
+        
+    def check_output_count(self):
+        self.check_output_count_aux(self.nodes)
+        
     ##// For debugging: A number of tests can be run on a genome to check its
     ##// integrity
     ##// Note: Some of these tests do not indicate a bug, but rather are meant
@@ -551,7 +578,7 @@ class Genome:
                 if curnode == inode:
                     found = True
                     break
-            if not Found:
+            if not found:
                 return False
                 
             found = False
@@ -559,7 +586,7 @@ class Genome:
                 if curnode == onode:
                     found = True
                     break
-            if not Found:
+            if not found:
                 return False
 
         # Check nodes are in order
@@ -784,8 +811,8 @@ class Genome:
                 innov_i += 1
 
         #
-        self.add_gene(self.genes, newgenes1)
-        self.add_gene(self.genes, newgenes2)
+        self.add_gene(self.genes, newgene1)
+        self.add_gene(self.genes, newgene2)
         self.node_insert(self.nodes, newnode)
 
         return True
@@ -840,7 +867,7 @@ class Genome:
                     trycount += 1
                 else:
                     count = 0
-                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, count, thresh)
+                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, [count], thresh)
                     if nodep1.type == NNode.OUTPUT or nodep2.type == NNode.OUTPUT:
                         recurflag = True
 
@@ -874,7 +901,7 @@ class Genome:
                     trycount += 1
                 else:
                     count = 0
-                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, count, thresh)
+                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, [count], thresh)
                 
                     if nodep1.type == NNode.OUTPUT or nodep2.type == NNode.OUTPUT:
                         recurflag = True
@@ -909,7 +936,7 @@ class Genome:
                     newweight = neat.randposneg() * neat.randfloat() * 1.0
                     
                     newgene = Gene()
-                    newgene.SetFromValues(thetrait, newweight, nodep1, nodep2, recurflag, curinnov[0], newweight)
+                    newgene.SetFromTraitAndValues(thetrait, newweight, nodep1, nodep2, recurflag, curinnov[0], newweight)
 
                     innov = Innovation(nodep1.node_id, nodep2.node_id, curinnov[0])
                     innov.SetNewLink(newweight, traitnum)
@@ -1187,7 +1214,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1206,7 +1233,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1437,7 +1464,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1456,7 +1483,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1483,9 +1510,6 @@ class Genome:
 
                 newgene = Gene()
                 newgene.SetFromGeneAndValues(chosengene, newtraits[traitnum], new_inode, new_onode)
-                if disable:
-                    newgene.enable = False
-                    disable = False
                 newgenes.append(newgene)
                 # not skipping
             #
@@ -1682,7 +1706,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1701,7 +1725,7 @@ class Genome:
                         else:
                             nodetraitnum = onode.nodetrait.trait_id - self.traits[0].trait_id
 
-                        new_oinode = NNode()
+                        new_onode = NNode()
                         new_onode.SetFromNNodeAndTrait(onode, newtraits[nodetraitnum])
                         self.node_insert(newnodes, new_onode)
                     else:
@@ -1847,7 +1871,7 @@ class Genome:
         nid = n.node_id
         for i in range(len(nlist)):
             curnode = nlist[i]
-            if curnode.node_id >= inum:
+            if curnode.node_id >= nid:
                 # found its place
                 nlist.insert(i, n)
                 return
@@ -1885,7 +1909,7 @@ class Genome:
 def new_Genome_auto(num_in, num_out, num_hidden, typ, filename):
     g = Genome()
     g.SetFromCounts2(num_in, num_out, num_hidden, typ)
-    print_Genome_tofile(g,filename)
+    print_Genome_tofile(g, filename)
     return g
 
 def print_Genome_tofile(g, filename):

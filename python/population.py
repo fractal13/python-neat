@@ -1,7 +1,8 @@
 import neat
 from genome import Genome
 from organism import Organism
-from species import Species
+from species import Species, order_species_key
+
 
 class Population:
 
@@ -288,7 +289,7 @@ class Population:
 
         #//Sort the Species by max fitness (Use an extra list to do this)
         #//These need to use ORIGINAL fitness
-        sorted_species.sort(key=species.order_species_key)
+        sorted_species.sort(key=order_species_key)
 
         #//Flag the lowest performing species over age 20 every 30 generations 
         #//NOTE: THIS IS FOR COMPETITIVE COEVOLUTION STAGNATION DETECTION
@@ -358,7 +359,7 @@ class Population:
 
         #//Sort the Species by max fitness (Use an extra list to do this)
         #//These need to use ORIGINAL fitness
-        sorted_species.sort(key=species.order_species_key)
+        sorted_species.sort(key=order_species_key)
         best_species_num = sorted_species[0].id
 
         #//Check for Population-level stagnation

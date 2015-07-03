@@ -1,4 +1,5 @@
-import organism, genome
+from genome import Genome
+from organism import Organism, order_orgs_key
 import neat
 import math
 
@@ -27,7 +28,7 @@ class Species:
         self.average_est = 0. # double ; //When playing real-time allows estimating average fitness
         return
 
-    def SetFromID(self, i):
+    def SetFromId(self, i):
         self.id = i
         self.age = 1
         self.ave_fitness = 0.0
@@ -79,7 +80,7 @@ class Species:
     #//Change the fitness of all the organisms in the species to possibly depend slightly on the age of the species
     #//and then divide it by the size of the species so that the organisms in the species "share" the fitness
     def adjust_fitness(self):
-        age_dept = (self.age - self.age_of_last_improvement + 1) - neat.dropoff_age
+        age_debt = (self.age - self.age_of_last_improvement + 1) - neat.dropoff_age
         if age_debt == 0:
             age_debt = 1
         
@@ -93,7 +94,7 @@ class Species:
                 curorg.fitness = 0.0001
             curorg.fitness = curorg.fitness / len(self.organisms)
 
-        self.organisms.sort(key=organism.order_orgs_key)
+        self.organisms.sort(key=order_orgs_key)
 
         if self.organisms[0].orig_fitness > self.max_fitness_ever:
             self.max_fitness_ever = self.organisms[0].orig_fitness
@@ -103,7 +104,7 @@ class Species:
         self.organisms[0].champion = True
         if len(self.organisms) > num_parents:
             for i in range(num_parents, len(self.organisms)):
-                self.organisms[i].eliminate = true
+                self.organisms[i].eliminate = True
         return
 
     def compute_average_fitness(self):
@@ -130,7 +131,7 @@ class Species:
         for curorg in self.organisms:
             e_o_intpart = int(math.floor( curorg.expected_offspring ))
             e_o_fracpart = curorg.expected_offspring - e_o_intpart
-            self.expected_offspring += e_o_int_part
+            self.expected_offspring += e_o_intpart
             skim += e_o_fracpart
             if skim > 1.0:
                 skim_intpart = int(math.floor(skim))
@@ -190,10 +191,10 @@ class Species:
                     pass
                 if self.organisms[thechamp_i].super_champ_offspring > 1:
                     if neat.randfloat() < 0.8 or neat.mutate_add_link_prob == 0.0:
-                        new_genome.mutate_link_weights(mut_power, 1.0, genome.GAUSSIAN)
+                        new_genome.mutate_link_weights(mut_power, 1.0, Genome.GAUSSIAN)
                     else:
                         net_analogue = new_genome.genesis(generation)
-                        new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
+                        new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
                         net_analogue = None
                         mut_struct_baby = True
                 #
@@ -220,12 +221,12 @@ class Species:
                 new_genome = self.organisms[mom_i].gnome.duplicate(count)
 
                 if neat.randfloat() < neat.mutate_add_node_prob:
-                    new_genome.mutate_add_node(pop.innovations, pop.cur_node_id, pop.cur_innov_num)
+                    new_genome.mutate_add_node(pop.innovations, [pop.cur_node_id], [pop.cur_innov_num])
                     mut_struct_baby = True
 
                 elif neat.randfloat() < neat.mutate_add_link_prob:
                     net_analogue = new_genome.genesis(generation)
-                    new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
+                    new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
                     net_analogue = None
                     mut_struct_baby = True;
 
@@ -237,7 +238,7 @@ class Species:
                     if neat.randfloat() < neat.mutate_node_trait_prob:
                         new_genome.mutate_node_trait(1)
                     if neat.randfloat() < neat.mutate_link_weights_prob:
-                        new_genome.mutate_link_weights(mut_power, 1.0, genome.GAUSSIAN)
+                        new_genome.mutate_link_weights(mut_power, 1.0, Genome.GAUSSIAN)
                     if neat.randfloat() < neat.mutate_toggle_enable_prob:
                         new_genome.mutate_toggle_enable(1)
                     if neat.randfloat() < neat.mutate_gene_reenable_prob:
@@ -274,10 +275,10 @@ class Species:
                 mom = self.organisms[mom_i]
                 if neat.randfloat() < neat.mate_multipoint_prob:
                     new_genome = mom.gnome.mate_multipoint(dad.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
-                elif neat.randfloat() < neat.mate_multipoint_avg_prob / (neat.mate_multipoint_avg_prob+neat.mate_singlepointprob):
-                    new_genome = mom.gnome.mate_multipoint_avg(data.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
+                elif neat.randfloat() < neat.mate_multipoint_avg_prob / (neat.mate_multipoint_avg_prob+neat.mate_singlepoint_prob):
+                    new_genome = mom.gnome.mate_multipoint_avg(dad.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
                 else:
-                    new_genome = mom.gnome.mate_singlepoint(data.gnome, count)
+                    new_genome = mom.gnome.mate_singlepoint(dad.gnome, count)
 
                 mate_baby = True
 
@@ -285,11 +286,11 @@ class Species:
                     (dad.gnome.genome_id == mom.gnome.genome_id) or
                     (dad.gnome.compatibility(mom.gnome) == 0.0)):
                     if neat.randfloat() < neat.mutate_add_node_prob:
-                        new_genome.mutate_add_node(pop.innovations, pop.cur_node_id, pop.cur_innov_num)
+                        new_genome.mutate_add_node(pop.innovations, [pop.cur_node_id], [pop.cur_innov_num])
                         mut_struct_baby = True
                     elif neat.randfloat() < neat.mutate_add_link_prob:
                         net_analogue = new_genome.genesis(generation)
-                        new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
+                        new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
                         net_analogue = None
                         mut_struct_baby = True
                     else:
@@ -300,7 +301,7 @@ class Species:
                         if neat.randfloat() < neat.mutate_node_trait_prob:
                             new_genome.mutate_node_trait(1)
                         if neat.randfloat() < neat.mutate_link_weights_prob:
-                            new_genome.mutate_link_weights(mut_power, 1.0, genome.GAUSSIAN)
+                            new_genome.mutate_link_weights(mut_power, 1.0, Genome.GAUSSIAN)
                         if neat.randfloat() < neat.mutate_toggle_enable_prob:
                             new_genome.mutate_toggle_enable(1)
                         if neat.randfloat() < neat.mutate_gene_reenable_prob:
@@ -360,7 +361,7 @@ class Species:
 
     #//Place organisms in this species in order by their fitness
     def rank(self):
-        self.organisms.sort(key=organism.order_org_key)
+        self.organisms.sort(key=order_org_key)
         return True
 
 

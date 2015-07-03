@@ -14,9 +14,9 @@ Population   - done, except for tests
 Files
 
 neat.cpp     - done, still need some tests
+neatmain.cpp - done, except for testing
+*.ne         - done, loading tests done
+experiements.cpp - xor done, pole* not done
 
 Untranslated files:
-experiements.cpp
-neatmain.cpp
-*.ne
 *genes*

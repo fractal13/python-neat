@@ -1,3 +1,7 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 import neat
 
 class Trait:
@@ -45,7 +49,10 @@ class Trait:
 
     # Set values by parsing a string
     def SetFromString(self, argline):
+        dprint(DEBUG_FILEINPUT, "Trait.SetFromString:argline:", argline)
         values = argline.split()
+        if len(values) < neat.num_trait_params+1:
+            dprint(DEBUG_ERROR, "Trait.SetFromString:argline:", argline, "too few items:", len(values), "should have", neat.num_trait_params+1)
         self.trait_id = int(values[0])
         for i in range(neat.num_trait_params):
             self.params[i] = float(values[i+1])

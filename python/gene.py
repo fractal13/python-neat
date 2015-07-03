@@ -70,7 +70,7 @@ class Gene:
                 break
 
         self.lnk = Link()
-        self.lnk.SetFromTrait(trait, weight, inode, onode, recur)
+        self.lnk.SetFromTrait(tr, weight, inode, onode, recur)
         return
 
     def SetFromGene(self, gene):
