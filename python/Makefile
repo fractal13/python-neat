@@ -1,6 +1,8 @@
 all:
-	for f in *.py; do python $$f; done
+	for f in *.py; do \
+		python $$f > $$f.testout; \
+	done
 
 clean:
-	-rm -f *~ *.pyc
+	-rm -f *~ *.pyc *.testout
 

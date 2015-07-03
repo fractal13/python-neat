@@ -11,9 +11,12 @@ Organism     - done, except for tests
 Species      - done, except for tests
 Population   - done, except for tests
 
+Files
+
+neat.cpp     - done, still need some tests
+
 Untranslated files:
 experiements.cpp
-neat.cpp (partially)
 neatmain.cpp
 *.ne
 *genes*
