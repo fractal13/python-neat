@@ -367,6 +367,9 @@ class Species:
 #// This is used for list sorting of Species by fitness of best organism highest fitness first 
 def order_species(x, y):
     return x.organisms[0].orig_fitness > y.organisms[0].orig_fitness
+def order_species_key(x):
+    # change sign to get highest first
+    return -x.organisms[0].orig_fitness
 
 def order_new_species(x, y):
     return x.compute_max_fitness() > y.compute_max_fitness()

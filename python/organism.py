@@ -107,7 +107,8 @@ class Organism:
 def order_orgs(x, y):
     return x.fitness > y.fitness
 def order_orgs_key(x):
-    return x.fitness
+    # change sign to get highest first
+    return -x.fitness
 
 def order_orgs_by_adjusted_fit(x, y):
     return x.fitness / len(x.species.organisms)  > y.fitness / len(y.species.organisms)
