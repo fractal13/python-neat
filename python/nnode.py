@@ -85,7 +85,9 @@ class NNode:
 
         self.node_id = 0
         self.gen_node_label = None  # HIDDEN, INPUT, OUTPUT, BIAS
-        
+
+        self.depth_visited = False
+        self.depth_max = 0
         return
 
     def SetFromNodeTypeAndId(self, ntype, nodeid):
@@ -266,21 +268,27 @@ class NNode:
         fout.write(str(self.gen_node_label) + "\n")
         return
 
-    def depth(self, d, mynet):
-        mx = d
+    def depth(self, mynet):
+        if self.depth_visited:
+            # stop loops
+            for curlink in self.incoming:
+                if curlink.in_node.depth_max + 1 > self.depth_max:
+                    self.depth_max = curlink.in_node.depth_max + 1
+            dprint(DEBUG_INTEGRITY, "Network loop detected.  node:", self, "depth:", self.depth_max)
+            return self.depth_max
 
-        if d > 10:
-            dprint(DEBUG_ERROR, "Potential network loop discovered.")
-            return 10
+        # first visit
+        self.depth_visited = True
+        self.depth_max = 0
 
         if self.type == NNode.SENSOR:
-            return d
+            return self.depth_max
         else:
             for curlink in self.incoming:
-                cur_depth = curlink.in_node.depth(d+1,mynet)
-                if cur_depth > mx:
-                    mx = cur_depth
-            return mx
+                cur_depth = curlink.in_node.depth(mynet)
+                if cur_depth + 1 > self.depth_max:
+                    self.depth_max = cur_depth + 1
+            return self.depth_max
 
 
 def main():

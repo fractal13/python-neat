@@ -313,7 +313,11 @@ class Network:
     def max_depth(self):
         mx = 0
         for o in self.outputs:
-            cur_depth = o.depth(0, self)
+            for curnode in self.all_nodes:
+                curnode.depth_max = 0
+                curnode.depth_visited = False
+            cur_depth = o.depth(self)
+            dprint(DEBUG_INTEGRITY, "Output Node:", o, "depth:", cur_depth)
             if cur_depth > mx:
                 mx = cur_depth
         return mx
