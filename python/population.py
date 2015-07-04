@@ -290,8 +290,7 @@ class Population:
         self.compat_mod = 0.3 #//Modify compat thresh to control speciation
 
         #//Stick the Species pointers into a new Species list for sorting
-        for curspecies in self.species:
-            sorted_species.append(curspecies)
+        sorted_species = [ curspecies for curspecies in self.species ]
 
         #//Sort the Species by max fitness (Use an extra list to do this)
         #//These need to use ORIGINAL fitness

@@ -258,24 +258,25 @@ class Network:
 
     # Check a potential link between an in_node and an out_node to see if the link must be recurrent
     def is_recur(self, potin_node, potout_node, count, thresh):
-        count[0] += 1
-        if count[0] > thresh:
+        count += 1
+        if count > thresh:
             # too many visits, stop looking
-            return False
+            return False, count
 
         if potin_node == potout_node:
             # found a loop
-            return True
+            return True, count
 
         # check incoming links on the in_node
         for curlink in potin_node.incoming:
             # skip known recurrent links
             if not curlink.is_recurrent:
-                if self.is_recur(curlink.in_node, potout_node, count, thresh):
-                    return True
+                ok, count = self.is_recur(curlink.in_node, potout_node, count, thresh)
+                if ok:
+                    return True, count
 
         # No loops found here
-        return False
+        return False, count
 
     # Initialize the loop counter
     def input_start(self):

@@ -33,6 +33,33 @@ class Organism:
 
         return
 
+    def deep_string(self):
+        net_id = genome_id = 0
+        if self.net:
+            net_id = self.net.net_id
+        if self.gnome:
+            genome_id = self.gnome.genome_id
+        s = "Organism[%d:%d]:start\n" % (net_id, genome_id)
+        if self.net:
+            s += self.net.deep_string()
+        if self.gnome:
+            s += self.gnome.deep_string()
+        s += "Organism[%d:%d]:end\n" % (net_id, genome_id)
+        return s
+        
+    def __str__(self):
+        net_id = genome_id = 0
+        if self.net:
+            net_id = self.net.net_id
+        if self.gnome:
+            genome_id = self.gnome.genome_id
+        s = "Organism[%d:%d]" % (net_id, genome_id)
+        if self.net:
+            s += " " + str(self.net)
+        if self.gnome:
+            s += " " + str(self.gnome)
+        return s
+        
     def SetFromGenome(self, fit, g, gen, md = ""):
         self.fitness = fit
         self.orig_fitness = self.fitness

@@ -583,7 +583,18 @@ class Genome:
     ##// Note: Some of these tests do not indicate a bug, but rather are meant
     ##// to be used to detect specific system states
     def verify(self):
-
+        
+        # Check for duplicate NNode_node_id
+        node_ids = set()
+        for curnode in self.nodes:
+            if curnode.node_id in node_ids:
+                dcallstack(DEBUG_ERROR)
+                dprint(DEBUG_ERROR, "Duplicate node id:", curnode)
+                return False
+            node_ids.add(curnode.node_id)
+        node_ids = None
+            
+        
         # Check the genes' nodes
         for curgene in self.genes:
             inode = curgene.lnk.in_node
@@ -767,6 +778,34 @@ class Genome:
     ##//   to find a suitable place to make the mutation.
     ##//   Generally, if they fail, they can be called again if desired. 
 
+    def have_innovation(self, innov_num):
+        min_i = 0
+        max_i = len(self.genes)
+        mid_i = (max_i + min_i) / 2
+        while (max_i >= min_i) and (mid_i < len(self.genes)):
+            if self.genes[mid_i].innovation_num == innov_num:
+                return True
+            elif self.genes[mid_i].innovation_num < innov_num:
+                min_i = mid_i + 1
+            else:
+                max_i = mid_i - 1
+            mid_i = (max_i + min_i) / 2
+        return False
+        
+    def have_node(self, node_id):
+        min_i = 0
+        max_i = len(self.nodes)
+        mid_i = (max_i + min_i) / 2
+        while (max_i >= min_i) and (mid_i < len(self.nodes)):
+            if self.nodes[mid_i].node_id == node_id:
+                return True
+            elif self.nodes[mid_i].node_id < node_id:
+                min_i = mid_i + 1
+            else:
+                max_i = mid_i - 1
+            mid_i = (max_i + min_i) / 2
+        return False
+    
     ##// Mutate genome by adding a node respresentation 
     def mutate_add_node(self, innovs, curnode_id, curinnov):
 
@@ -782,7 +821,7 @@ class Genome:
 
         #
         if not found:
-            return False
+            return False, curnode_id, curinnov
         #
         thegene.enable = False
         #
@@ -796,29 +835,40 @@ class Genome:
             if innov_i < len(innovs):
                 theinnov = innovs[innov_i]
             if innov_i >= len(innovs):
+                if self.have_node(curnode_id):
+                    dprint(DEBUG_ERROR, "Already have node with this id:", curnode_id)
+                if self.have_innovation(curinnov):
+                    dprint(DEBUG_ERROR, "Already have innovation with this id[0]:", curinnov)
+                if self.have_innovation(curinnov+1):
+                    dprint(DEBUG_ERROR, "Already have innovation with this id[1]:", curinnov+1)
                 # new innovation
                 trait = thelink.linktrait
                 newnode = NNode()
-                newnode.SetFromNodeTypeIdAndPlacement(NNode.NEURON, curnode_id[0], NNode.HIDDEN)
-                curnode_id[0] += 1
+                newnode.SetFromNodeTypeIdAndPlacement(NNode.NEURON, curnode_id, NNode.HIDDEN)
+                curnode_id += 1
                 newnode.nodetrait = self.traits[0]
 
                 newgene1 = Gene()
                 newgene2 = Gene()
-                newgene1.SetFromTraitAndValues(trait, 1.0, in_node, newnode, thelink.is_recurrent, curinnov[0], 0.0)
-                newgene2.SetFromTraitAndValues(trait, oldweight, newnode, out_node, False, curinnov[0]+1.0, 0.0)
-                curinnov[0] += 2.0
+                newgene1.SetFromTraitAndValues(trait, 1.0, in_node, newnode, thelink.is_recurrent, curinnov, 0.0)
+                newgene2.SetFromTraitAndValues(trait, oldweight, newnode, out_node, False, curinnov+1, 0.0)
+                curinnov += 2
 
-                innov = Innovation(in_node.node_id, out_node.node_id, curinnov[0]-2.0)
-                innov.SetNewNode(curinnov[0]-1.0, newnode.node_id, thegene.innovation_num)
+                innov = Innovation(in_node.node_id, out_node.node_id, curinnov-2.0)
+                innov.SetNewNode(curinnov-1.0, newnode.node_id, thegene.innovation_num)
                 innovs.append(innov)
                 done = True
+
 
             elif ((theinnov.innovation_type == Innovation.NEWNODE) and
                   (theinnov.node_in_id == in_node.node_id) and
                   (theinnov.node_out_id == out_node.node_id) and
-                  (theinnov.old_innov_num == thegene.innovation_num)):
+                  (theinnov.old_innov_num == thegene.innovation_num) and
+                  (not self.have_innovation(theinnov.innovation_num1)) and
+                  (not self.have_innovation(theinnov.innovation_num2)) and
+                  (not self.have_node(theinnov.newnode_id))):
                 trait = thelink.linktrait
+                
                 newnode = NNode()
                 newnode.SetFromNodeTypeIdAndPlacement(NNode.NEURON, theinnov.newnode_id, NNode.HIDDEN)
                 newnode.nodetrait = self.traits[0]
@@ -838,7 +888,7 @@ class Genome:
         self.add_gene(self.genes, newgene2)
         self.node_insert(self.nodes, newnode)
 
-        return True
+        return True, curnode_id, curinnov
 
     ##// Mutate the genome by adding a new link between 2 random NNodes 
     def mutate_add_link(self, innovs, curinnov, tries):
@@ -890,7 +940,7 @@ class Genome:
                     trycount += 1
                 else:
                     count = 0
-                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, [count], thresh)
+                    recurflag, count = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, count, thresh)
                     if nodep1.type == NNode.OUTPUT or nodep2.type == NNode.OUTPUT:
                         recurflag = True
 
@@ -924,7 +974,7 @@ class Genome:
                     trycount += 1
                 else:
                     count = 0
-                    recurflag = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, [count], thresh)
+                    recurflag, count = self.phenotype.is_recur(nodep1.analogue, nodep2.analogue, count, thresh)
                 
                     if nodep1.type == NNode.OUTPUT or nodep2.type == NNode.OUTPUT:
                         recurflag = True
@@ -951,7 +1001,7 @@ class Genome:
                     
                 if innov_i >= len(innovs):
                     if self.phenotype is None:
-                        return False
+                        return False, curinnov
 
                     traitnum = neat.randint(0, len(self.traits)-1)
                     thetrait = self.traits[traitnum]
@@ -959,13 +1009,13 @@ class Genome:
                     newweight = neat.randposneg() * neat.randfloat() * 1.0
                     
                     newgene = Gene()
-                    newgene.SetFromTraitAndValues(thetrait, newweight, nodep1, nodep2, recurflag, curinnov[0], newweight)
+                    newgene.SetFromTraitAndValues(thetrait, newweight, nodep1, nodep2, recurflag, curinnov, newweight)
 
-                    innov = Innovation(nodep1.node_id, nodep2.node_id, curinnov[0])
+                    innov = Innovation(nodep1.node_id, nodep2.node_id, curinnov)
                     innov.SetNewLink(newweight, traitnum)
                     innovs.append(innov)
 
-                    curinnov[0] += 1.0
+                    curinnov += 1
 
                     done = True
 
@@ -983,13 +1033,14 @@ class Genome:
                 #
             #
             self.add_gene(self.genes, newgene)
-            return True
+            return True, curinnov
             
         else:
             # not found
-            return False
+            return False, curinnov
         #
 
+    # this code doesn't appear to get called
     def mutate_add_sensor(self, innovs, curinnov):
         newweight = 0.0
         sensors = []
@@ -1013,7 +1064,7 @@ class Genome:
         sensors = keep_sensors
 
         if len(sensors) == 0:
-            return
+            return False, curinnov
         #
 
         sensor = random.choice(sensors)
@@ -1040,13 +1091,13 @@ class Genome:
                         newweight = neat.randposneg() * neat.randfloat() * 3.0
 
                         newgene = Gene()
-                        newgene.SetFromValues(thetrait, newweight, sensor, output, False, curinnov[0], newweight)
+                        newgene.SetFromValues(thetrait, newweight, sensor, output, False, curinnov, newweight)
 
-                        innov = Innovation(sensor.node_id, output.node_id, curinnov[0])
+                        innov = Innovation(sensor.node_id, output.node_id, curinnov)
                         innov.SetNewLink(newweight, traitnum)
                         innovs.append(innov)
                         
-                        curinnov[0] += 1.0
+                        curinnov += 1
                         
                         done = True
                         
@@ -1067,7 +1118,7 @@ class Genome:
                 # if found
             # for output
         # def mutate_add_sensor
-        return
+        return True, curinnov
         
     ##// ****** MATING METHODS ***** 
 
@@ -1894,7 +1945,13 @@ class Genome:
         nid = n.node_id
         for i in range(len(nlist)):
             curnode = nlist[i]
-            if curnode.node_id >= nid:
+            if curnode.node_id == nid:
+                # duplicate node_id, don't add it
+                dprint(DEBUG_ERROR, "Should not find duplicate any more.", n)
+                dcallstack(DEBUG_ERROR)
+                dprint(DEBUG_ERROR, self.deep_string())
+                return
+            if curnode.node_id > nid:
                 # found its place
                 nlist.insert(i, n)
                 return
@@ -1908,7 +1965,11 @@ class Genome:
         inum = g.innovation_num
         for i in range(len(glist)):
             curgene = glist[i]
-            if curgene.innovation_num >= inum:
+            if curgene.innovation_num == inum:
+                # duplicate innovation_num, don't add it
+                dprint(DEBUG_ERROR, "Should not find duplicate any more.", g)
+                return
+            if curgene.innovation_num > inum:
                 # found its place
                 glist.insert(i, g)
                 return

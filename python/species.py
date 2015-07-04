@@ -1,3 +1,7 @@
+from utils import matching_import
+from debug import dprint, dcallstack
+import debug
+matching_import("DEBUG_.*", debug, globals())
 from genome import Genome
 from organism import Organism, order_orgs_key
 import neat
@@ -168,6 +172,26 @@ class Species:
                 champ_fitness = curorg.fitness
         return thechamp
 
+    def verify_baby(self, baby, mom, dad):
+        if debug.is_set(DEBUG_INTEGRITY):
+            if not baby.verify():
+                dcallstack(DEBUG_INTEGRITY)
+                dprint(DEBUG_INTEGRITY, "baby.verify() failed.")
+                dprint(DEBUG_INTEGRITY, "baby:\n", baby.deep_string())
+                if mom:
+                    dprint(DEBUG_INTEGRITY, "mom:\n", mom.deep_string())
+                if dad:
+                    dprint(DEBUG_INTEGRITY, "dad:\n", dad.deep_string())
+        return
+
+    def verify_genome(self, g):
+        if debug.is_set(DEBUG_INTEGRITY):
+            if not g.verify():
+                dcallstack(DEBUG_INTEGRITY)
+                dprint(DEBUG_INTEGRITY, "g.verify() failed.")
+                dprint(DEBUG_INTEGRITY, "g:\n", g.deep_string())
+        return
+
     #//Perform mating and mutation to form next generation
     def reproduce(self, generation, pop, sorted_species):
         champ_done = False
@@ -183,10 +207,12 @@ class Species:
             mut_struct_baby = False
             mate_baby = False
             outside = False
-            
+            mom = dad = None
+
             if self.organisms[thechamp_i].super_champ_offspring > 0:
                 mom_i = thechamp_i
-                new_genome = self.organisms[mom_i].gnome.duplicate(count)
+                mom = self.organisms[mom_i]
+                new_genome = mom.gnome.duplicate(count)
                 if self.organisms[thechamp_i].super_champ_offspring == 1:
                     pass
                 if self.organisms[thechamp_i].super_champ_offspring > 1:
@@ -194,7 +220,8 @@ class Species:
                         new_genome.mutate_link_weights(mut_power, 1.0, Genome.GAUSSIAN)
                     else:
                         net_analogue = new_genome.genesis(generation)
-                        new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
+                        ok, pop.cur_innov_num = \
+                            new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
                         net_analogue = None
                         mut_struct_baby = True
                 #
@@ -203,53 +230,72 @@ class Species:
                 if self.organisms[thechamp_i].super_champ_offspring == 1:
                     if self.organisms[thechamp_i].pop_champ:
                         baby.pop_champ_child = True
-                        baby.high_fit = self.organisms[mom_i].orig_fitness
+                        baby.high_fit = mom.orig_fitness
                 #
                 self.organisms[thechamp_i].super_champ_offspring -= 1
+                self.verify_baby(baby, mom, dad)
 
                 # super_champ_offspring > 0
             elif (not champ_done) and (self.expected_offspring > 5):
                 mom_i = thechamp_i
-                new_genome = self.organisms[mom_i].gnome.duplicate(count)
+                mom = self.organisms[mom_i]
+                new_genome = mom.gnome.duplicate(count)
                 baby = Organism()
                 baby.SetFromGenome(0.0, new_genome, generation)
                 champ_done = True
+                self.verify_baby(baby, mom, dad)
 
                 # (not champ_done) and (self.expected_offspring > 5)
             elif (neat.randfloat() < neat.mutate_only_prob) or (poolsize == 0):
                 mom_i = neat.randint(0, poolsize)
-                new_genome = self.organisms[mom_i].gnome.duplicate(count)
+                mom = self.organisms[mom_i]
+                new_genome = mom.gnome.duplicate(count)
+                self.verify_genome(new_genome)
 
                 if neat.randfloat() < neat.mutate_add_node_prob:
-                    new_genome.mutate_add_node(pop.innovations, [pop.cur_node_id], [pop.cur_innov_num])
+                    dprint(DEBUG_INTEGRITY, "a: pop.cur_node_id:", pop.cur_node_id)
+                    ok, pop.cur_node_id, pop.cur_innov_num = \
+                        new_genome.mutate_add_node(pop.innovations, pop.cur_node_id, pop.cur_innov_num)
+                    dprint(DEBUG_INTEGRITY, "b: pop.cur_node_id:", pop.cur_node_id)
                     mut_struct_baby = True
+                    self.verify_genome(new_genome)
 
                 elif neat.randfloat() < neat.mutate_add_link_prob:
                     net_analogue = new_genome.genesis(generation)
-                    new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
+                    ok, pop.cur_innov_num = \
+                        new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
                     net_analogue = None
-                    mut_struct_baby = True;
+                    mut_struct_baby = True
+                    self.verify_genome(new_genome)
 
                 else:
                     if neat.randfloat() < neat.mutate_random_trait_prob:
                         new_genome.mutate_random_trait()
+                        self.verify_genome(new_genome)
                     if neat.randfloat() < neat.mutate_link_trait_prob:
                         new_genome.mutate_link_trait(1)
+                        self.verify_genome(new_genome)
                     if neat.randfloat() < neat.mutate_node_trait_prob:
                         new_genome.mutate_node_trait(1)
+                        self.verify_genome(new_genome)
                     if neat.randfloat() < neat.mutate_link_weights_prob:
                         new_genome.mutate_link_weights(mut_power, 1.0, Genome.GAUSSIAN)
+                        self.verify_genome(new_genome)
                     if neat.randfloat() < neat.mutate_toggle_enable_prob:
                         new_genome.mutate_toggle_enable(1)
+                        self.verify_genome(new_genome)
                     if neat.randfloat() < neat.mutate_gene_reenable_prob:
                         new_genome.mutate_gene_reenable()
+                        self.verify_genome(new_genome)
 
                 baby = Organism()
                 baby.SetFromGenome(0.0, new_genome, generation)
+                self.verify_baby(baby, mom, dad)
 
                 # (neat.randfloat() < neat.mutate_only_prob) or (poolsize == 0)
             else:
                 mom_i = neat.randint(0, poolsize)
+                mom = self.organisms[mom_i]
 
                 if neat.randfloat() > neat.interspecies_mate_rate:
                     # within species
@@ -272,7 +318,6 @@ class Species:
                     dad = randspecies.organisms[0]
                     outside = True
 
-                mom = self.organisms[mom_i]
                 if neat.randfloat() < neat.mate_multipoint_prob:
                     new_genome = mom.gnome.mate_multipoint(dad.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
                 elif neat.randfloat() < neat.mate_multipoint_avg_prob / (neat.mate_multipoint_avg_prob+neat.mate_singlepoint_prob):
@@ -286,11 +331,15 @@ class Species:
                     (dad.gnome.genome_id == mom.gnome.genome_id) or
                     (dad.gnome.compatibility(mom.gnome) == 0.0)):
                     if neat.randfloat() < neat.mutate_add_node_prob:
-                        new_genome.mutate_add_node(pop.innovations, [pop.cur_node_id], [pop.cur_innov_num])
+                        dprint(DEBUG_INTEGRITY, "a: pop.cur_node_id:", pop.cur_node_id)
+                        ok, pop.cur_node_id, pop.cur_innov_num = \
+                            new_genome.mutate_add_node(pop.innovations, pop.cur_node_id, pop.cur_innov_num)
+                        dprint(DEBUG_INTEGRITY, "b: pop.cur_node_id:", pop.cur_node_id)
                         mut_struct_baby = True
                     elif neat.randfloat() < neat.mutate_add_link_prob:
                         net_analogue = new_genome.genesis(generation)
-                        new_genome.mutate_add_link(pop.innovations, [pop.cur_innov_num], neat.newlink_tries)
+                        ok, pop.cur_innov_num = \
+                            new_genome.mutate_add_link(pop.innovations, pop.cur_innov_num, neat.newlink_tries)
                         net_analogue = None
                         mut_struct_baby = True
                     else:
@@ -309,13 +358,15 @@ class Species:
 
                     baby = Organism()
                     baby.SetFromGenome(0.0, new_genome, generation)
+                    self.verify_baby(baby, mom, dad)
 
                 else:
                     baby = Organism()
                     baby.SetFromGenome(0.0, new_genome, generation)
+                    self.verify_baby(baby, mom, dad)
 
                 # else
-            
+
             baby.mut_struct_baby = mut_struct_baby
             baby.mate_baby = mate_baby
             curspecies_i = 0
