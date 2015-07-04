@@ -89,7 +89,7 @@ class Gene:
 
     def SetFromGene(self, gene):
         self.innovation_num = gene.innovation_num
-        self.mutation_num = gene.muntation_num
+        self.mutation_num = gene.mutation_num
         self.enable = gene.enable
         self.frozen = gene.frozen
         self.lnk = Link()

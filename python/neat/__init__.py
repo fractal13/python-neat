@@ -3,7 +3,7 @@
 #
 from neat import *
 from gene import Gene
-from genome import Genome
+from genome import Genome, print_Genome_tofile
 from innovation import Innovation
 from link import Link
 from network import Network

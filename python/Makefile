@@ -1,19 +1,6 @@
 PYTHON_MODULES := \
-	debug.py \
 	experiments.py \
-	experiment_xor.py \
-	gene.py \
-	genome.py \
-	innovation.py \
-	link.py \
-	neat.py \
-	network.py \
-	nnode.py \
-	organism.py \
-	population.py \
-	species.py \
-	trait.py \
-	utils.py
+	experiment_xor.py
 
 PYTHON_MAINS := \
 	neatmain.py

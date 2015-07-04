@@ -1,26 +1,26 @@
-from utils import matching_import
-from debug import dprint
-import debug
+from neat.utils import matching_import
+from neat.debug import dprint
+from neat import debug as debug
 matching_import("DEBUG_.*", debug, globals())
 
 import neat
-from genome import Genome, print_Genome_tofile
-from population import Population
+from neat import Genome, print_Genome_tofile, Population
+import neat.neat as neatconfig
 
 g_found_optimal = False
 
 #//Perform evolution on XOR, for gens generations
 #Population *xor_test(int gens) {
 def xor_test(gens):
-    gene_filename = neat.genedir + "/xorstartgenes"
+    gene_filename = neatconfig.genedir + "/xorstartgenes"
     
     pop = None
     start_genome = None
     
     #//Hold records for each run
-    evals = [ 0 for i in range(neat.num_runs) ]
-    genes = [ 0 for i in range(neat.num_runs) ]
-    nodes = [ 0 for i in range(neat.num_runs) ]
+    evals = [ 0 for i in range(neatconfig.num_runs) ]
+    genes = [ 0 for i in range(neatconfig.num_runs) ]
+    nodes = [ 0 for i in range(neatconfig.num_runs) ]
 
     # Made as lists for pass-by-reference
     winnernum = [ 0 ]
@@ -59,11 +59,11 @@ def xor_test(gens):
         dprint(DEBUG_ERROR, "genome.verify() failed:", start_genome.deep_string())
 
     #Complete a number of runs
-    for expcount in range(neat.num_runs):
+    for expcount in range(neatconfig.num_runs):
         #//Spawn the Population
         print "Spawning Population off Genome2"
         pop = Population()
-        pop.SetFromGenome(start_genome, neat.pop_size)
+        pop.SetFromGenome(start_genome, neatconfig.pop_size)
       
         print "Verifying Spawned Population[%d]" % (expcount, )
         if not pop.verify():
@@ -76,12 +76,12 @@ def xor_test(gens):
                 dprint(DEBUG_ERROR, "Population[%d] Epoch[%d] verification failed" % (expcount, gen))
 
             #print "Epoch", gen
-            generation_filename = neat.generationdir + "/gen_%d" % (gen,)
+            generation_filename = neatconfig.generationdir + "/gen_%d" % (gen,)
 
             # Evaluate one generation, checking for a successful end
             #//Check for success
             if xor_epoch(pop, gen, generation_filename, winnernum, winnergenes, winnernodes):
-                evals[expcount] = neat.pop_size * (gen-1) + winnernum[0]
+                evals[expcount] = neatconfig.pop_size * (gen-1) + winnernum[0]
                 genes[expcount] = winnergenes[0]
                 nodes[expcount] = winnernodes[0]
                 break
@@ -93,18 +93,18 @@ def xor_test(gens):
 
     #//Average and print stats
     print "Nodes: "
-    for expcount in range(neat.num_runs):
+    for expcount in range(neatconfig.num_runs):
         print nodes[expcount]
         totalnodes += nodes[expcount]
     
     print "Genes: "
-    for expcount in range(neat.num_runs):
+    for expcount in range(neatconfig.num_runs):
         print genes[expcount]
         totalgenes += genes[expcount]
     
     print "Evals "
     samples = 0
-    for expcount in range(neat.num_runs):
+    for expcount in range(neatconfig.num_runs):
         print evals[expcount]
         if evals[expcount] > 0:
             totalevals += evals[expcount]
@@ -119,7 +119,7 @@ def xor_test(gens):
         avggenes = 0
         avgevals = 0
         
-    print "Failures:", (neat.num_runs - samples), "out of", neat.num_runs, "runs"
+    print "Failures:", (neatconfig.num_runs - samples), "out of", neatconfig.num_runs, "runs"
     print "Average Nodes:", avgnodes
     print "Average Genes:", avggenes
     print "Average Evals:", avgevals
@@ -195,7 +195,7 @@ def xor_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
             winnernodes[0] = len(curorg.gnome.nodes)
             if winnernodes[0] == 5:
                 #//You could dump out optimal genomes here if desired
-                curorg.gnome.print_to_filename(neat.genedir + "/xor_optimal");
+                curorg.gnome.print_to_filename(neatconfig.genedir + "/xor_optimal");
                 global g_found_optimal
                 g_found_optimal = True
                 pass
@@ -211,7 +211,7 @@ def xor_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
 
 
     #//Only print to file every print_every generations
-    if win or ((generation % neat.print_every) == 0):
+    if win or ((generation % neatconfig.print_every) == 0):
         pop.print_to_filename_by_species(filename)
 
     if win:
@@ -220,7 +220,7 @@ def xor_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
                 print "WINNER IS #", curorg.gnome.genome_id
                 #//Prints the winner to file
                 #//IMPORTANT: This causes generational file output!
-                print_Genome_tofile(curorg.gnome, neat.genedir + "/xor_winner")
+                print_Genome_tofile(curorg.gnome, neatconfig.genedir + "/xor_winner")
 
     if win:
         return True
@@ -232,7 +232,7 @@ def xor_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
     # xor_epoch done
 
 def main():
-    neat.load_neat_params(neat.configdir + "/xor.ne", True)
+    neat.load_neat_params(neatconfig.configdir + "/xor.ne", True)
     p = xor_test(100)
     p = None
     return
