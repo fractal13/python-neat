@@ -52,29 +52,32 @@ class NNode:
         return s
         
     def __init__(self):
-	self.activation_count = 0; # Inactive upon creation
-	self.last_activation = 0.0
-	self.last_activation2 = 0.0
+	self.activation_count = 0 # int activation_count;  // keeps track of which activation the node is currently in
+	self.last_activation = 0.0 # double last_activation; // Holds the previous step's activation for recurrency
+	self.last_activation2 = 0.0 # double last_activation2; // Holds the activation BEFORE the prevous step's
+        # // This is necessary for a special recurrent case when the innode
+        # // of a recurrent link is one time step ahead of the outnode.
+        # // The innode then needs to send from TWO time steps ago
 
-	self.nodetrait = None # Trait object
-	self.trait_id = 1
+	self.nodetrait = None # Trait *nodetrait; // Points to a trait of parameters
+	self.trait_id = 1 # int trait_id;  // identify the trait derived by this node
 
-	self.dup = None      # NNode object
-	self.analogue = None # NNode object
-	self.override = False
-        self.override_value = 0.0
+	self.dup = None      # NNode *dup;       // Used for Genome duplication
+	self.analogue = None # NNode *analogue;  // Used for Gene decoding
+	self.override = False # bool override; // The NNode cannot compute its own output- something is overriding it
+        self.override_value = 0.0 # double override_value; // Contains the activation value that will override this node's activation
         
-	self.frozen = False
-	self.ftype = NNode.SIGMOID
-	self.type = None; # NEURON or SENSOR type
-	self.activesum = 0.0
-	self.activation = 0.0
-	self.active_flag = False
+	self.frozen = False  # bool frozen; // When frozen, cannot be mutated (meaning its trait pointer is fixed)
+	self.ftype = NNode.SIGMOID # functype ftype; // type is either SIGMOID ..or others that can be added
+	self.type = None # nodetype type; // type is either NEURON or SENSOR 
+	self.activesum = 0.0 # double activesum;  // The incoming activity before being processed 
+	self.activation = 0.0 # double activation; // The total activation entering the NNode 
+	self.active_flag = False # bool active_flag;  // To make sure outputs are active
 	self.output = 0.0
 
         self.params = [ 0.0 for x in range(neat.num_trait_params) ]
-        self.incoming = []
-        self.outgoing = []
+        self.incoming = [] # std::vector<Link*> incoming; // A list of pointers to incoming weighted signals from other nodes
+        self.outgoing = [] # std::vector<Link*> outgoing;  // A list of pointers to links carrying this node's signal
         #self.rowlevels = ?
         #self.row = ?
         #self.ypos = ?

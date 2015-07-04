@@ -106,6 +106,20 @@ class Organism:
         self.gnome.print_to_file(ofile)
         return True
 
+    def verify(self):
+        # Network.verify() calls Genome.verify() so try it first, but not both
+        if self.net:
+            if not self.net.verify():
+                dprint(DEBUG_ERROR, "Network failed to verify.")
+                dprint(DEBUG_ERROR, "Network:", self.net.deep_string())
+                return False
+        elif self.gnome:
+            if not self.gnome.verify():
+                dprint(DEBUG_ERROR, "Gnome failed to verify.")
+                dprint(DEBUG_ERROR, "Genome:", self.gnome.deep_string())
+                return False
+        return True
+
         
 
 #// This is used for list sorting of Organisms by fitness..highest fitness first

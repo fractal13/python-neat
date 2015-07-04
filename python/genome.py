@@ -1,5 +1,5 @@
 from utils import matching_import
-from debug import dprint
+from debug import dprint, dcallstack
 import debug
 matching_import("DEBUG_.*", debug, globals())
 from trait import Trait
@@ -41,13 +41,13 @@ class Genome:
     def deep_string(self):
         s = "Genome[%d]:start\n" % (self.genome_id, )
         for curtrait in self.traits:
-            s += curtrait.deep_string()
+            s += "  " + curtrait.deep_string()
         for curnode in self.nodes:
-            s += curnode.deep_string()
+            s += "  " + curnode.deep_string()
         for curgene in self.genes:
-            s += curgene.deep_string()
+            s += "  " + curgene.deep_string()
         if self.phenotype:
-            s += self.phenotype.deep_string()
+            s += "  " + self.phenotype.deep_string()
         s += "Genome[%d]:end\n" % (self.genome_id, )
         return s
         
@@ -400,6 +400,10 @@ class Genome:
     def new_Genome_load(cls, filename):
         newgenome = cls()
         fin = open(filename, "r")
+        if not fin:
+            dprint(DEBUG_ERROR, "Unable to open file %s." % (filename, ))
+            return None
+            
         done = False
         while (not done) and fin:
             words = fin.readline().strip().split()
@@ -425,7 +429,7 @@ class Genome:
         # create nodes
         for curnode in self.nodes:
             newnode = NNode()
-            newnode.SetFromNodeTypeAndId(curnode.type, curnode.node_id)
+            newnode.SetFromNodeTypeIdAndPlacement(curnode.type, curnode.node_id, curnode.gen_node_label)
 
             # Trait parameters
             curtrait = curnode.nodetrait
@@ -592,6 +596,7 @@ class Genome:
                     found = True
                     break
             if not found:
+                dcallstack(DEBUG_ERROR)
                 dprint(DEBUG_ERROR, "inode not found")
                 return False
                 
@@ -601,29 +606,15 @@ class Genome:
                     found = True
                     break
             if not found:
+                dcallstack(DEBUG_ERROR)
                 dprint(DEBUG_ERROR, "onode not found")
-                return False
-
-            if len(inode.outgoing) == 0:
-                dprint(DEBUG_ERROR, "genome:", self.deep_string())
-                dprint(DEBUG_ERROR, "inode:", inode.deep_string())
-                dprint(DEBUG_ERROR, "onode:", onode.deep_string())
-                dprint(DEBUG_ERROR, "gene:", curgene.deep_string())
-                dprint(DEBUG_ERROR, "inode.outgoing = []")
-                return False
-            if len(onode.incoming) == 0:
-                dprint(DEBUG_ERROR, "genome:", self)
-                dprint(DEBUG_ERROR, "inode:", inode.deep_string())
-                dprint(DEBUG_ERROR, "onode:", onode.deep_string())
-                dprint(DEBUG_ERROR, "gene:", curgene.deep_string())
-                dprint(DEBUG_ERROR, curgene.deep_string())
-                dprint(DEBUG_ERROR, "onode.incoming = []")
                 return False
 
         # Check nodes are in order
         last_id = 0
         for curnode in self.nodes:
             if curnode.node_id < last_id:
+                dcallstack(DEBUG_ERROR)
                 dprint(DEBUG_ERROR, "node_id out of order")
                 return False
             last_id = curnode.node_id

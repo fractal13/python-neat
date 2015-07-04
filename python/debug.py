@@ -10,7 +10,7 @@ g_header = { DEBUG_ERROR: "ERR",
              }
 
 debug_level = (0 | \
-#               DEBUG_ERROR | \
+               DEBUG_ERROR | \
 #               DEBUG_ALGO | \
 #               DEBUG_FILEINPUT | \
 #               DEBUG_INTEGRITY | \
@@ -31,5 +31,28 @@ def dprint(level, *args):
         print s
     return
 
+def dcallstack(level):
+    if is_set(level):
+        frame = inspect.currentframe().f_back
+        strings = []
+        while frame:
+            # up one level
+            func = frame.f_code
+            funcname = func.co_name
+            filename = func.co_filename.split("/")[-1]
+            lineno = frame.f_lineno
+            s = "%s:%s:%d" % (funcname, filename, lineno)
+            strings.append(s)
+            frame = frame.f_back
+        strings.reverse()
+        for i in range(len(strings)):
+            print "%s [%d] %s" % (g_header[level], i+1, strings[i])
+    return
+
+def main():
+    print "Need debug exercise code here."
+    return
     
+if __name__ == "__main__":
+    main()
 

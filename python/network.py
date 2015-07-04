@@ -1,5 +1,5 @@
 from utils import matching_import
-from debug import dprint
+from debug import dprint, dcallstack
 import debug
 matching_import("DEBUG_.*", debug, globals())
 from nnode import NNode
@@ -32,12 +32,71 @@ class Network:
                self.maxweight, str(self.adaptable))
         return s
     def deep_string(self):
-        return str(self) + "\n"
+        s = str(self) + " start\n"
+        for curnode in self.all_nodes:
+            s += "  " + str(curnode) + " start\n"
+            for ilink in curnode.incoming:
+                s += "  " + "  " + "ilink: " + str(ilink) + "\n"
+            for olink in curnode.outgoing:
+                s += "  " + "  " + "olink: " + str(olink) + "\n"
+            s += "  " + str(curnode) + " end\n"
+        s += "Network[%d] end\n" % (self.net_id) 
+        return s
 
     def verify(self):
+        # check the genome
+        if self.genotype:
+            if not self.genotype.verify():
+                dprint(DEBUG_ERROR, "Genome not verified.")
+                return False
+                
+        # make sure we have outputs and inputs
         if len(self.outputs) == 0:
+            dcallstack(DEBUG_ERROR)
             dprint(DEBUG_INTEGRITY, "NO_OUTPUTS", str(self))
             return False
+        if len(self.inputs) == 0:
+            dcallstack(DEBUG_ERROR)
+            dprint(DEBUG_INTEGRITY, "NO_INPUTS", str(self))
+            return False
+
+        # Note: connectivity is not strictly required.
+        # It's possible for nodes to be disconnected during evolution.
+        if debug.is_set(DEBUG_INTEGRITY):
+            
+            # check connectivity
+            for curnode in self.all_nodes:
+
+                if curnode.type != NNode.SENSOR:
+                    # should have inputs
+                    if len(curnode.incoming) == 0:
+                        dcallstack(DEBUG_ERROR)
+                        dprint(DEBUG_ERROR, "Node without incoming:", str(curnode))
+                        return False
+                    # each incoming link should have curnode as out_node
+                    for ilink in curnode.incoming:
+                        onode = ilink.out_node
+                        if onode != curnode:
+                            dcallstack(DEBUG_ERROR)
+                            dprint(DEBUG_ERROR, "curnode.incoming[?].out_node isn't curnode.",
+                                   "curnode:", str(curnode), "ilink:", str(ilink),
+                                   "out_node:", str(ilink.out_node))
+                            return False
+
+                if curnode.gen_node_label != NNode.OUTPUT:
+                    # should have outputs
+                    if len(curnode.outgoing) == 0:
+                        dcallstack(DEBUG_ERROR)
+                        dprint(DEBUG_ERROR, "Node without outgoing:", str(curnode))
+                        return False
+                    # each outgoing link should have curnode as in_node
+                    for olink in curnode.outgoing:
+                        if olink.in_node != curnode:
+                            dcallstack(DEBUG_ERROR)
+                            dprint(DEBUG_ERROR, "curnode.outgoing[?].in_node isn't curnode.",
+                                   "curnode:", str(curnode), "olink:", str(olink),
+                                   "in_node:", (olink.in_node))
+                            return False
         return True
         
     def SetFromLists(self, ins, outs, alls, netid, adaptval=False):

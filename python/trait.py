@@ -126,7 +126,7 @@ def main():
     u = TraitFromString("2 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1")
     v = TraitFromOther(t)
     w = TraitFromAverage(t, u)
-    fout = open("trait.txt", "wb")
+    fout = open(neat.testdir + "/trait.txt", "wb")
     t.print_to_file(fout)
     u.print_to_file(fout)
     v.print_to_file(fout)

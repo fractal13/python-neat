@@ -1,0 +1,4 @@
+testout
+gen/gen_*
+genes/xor_optimal
+genes/xor_winner

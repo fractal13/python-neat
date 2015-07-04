@@ -95,7 +95,7 @@ class Population:
 
         iFile = open(filename, "r")
         if not iFile:
-            print "Can't open genomes file for input"
+            dprint(DEBUG_ERROR, "Can't open genomes file for input %s." % (filename, ))
             return
 
         md = False
@@ -137,13 +137,13 @@ class Population:
         self.speciate()
         return
 
-    #// Run verify on all Genomes in this Population (Debugging)
+    #// Run verify on all Organisms in this Population (Debugging)
     # bool verify();
     def verify(self):
         verification = True
         for curorg in self.organisms:
-            if not curorg.gnome.verify():
-                dprint(DEBUG_ERROR, "Genome verification failed")
+            if not curorg.verify():
+                dprint(DEBUG_ERROR, "Organism verification failed.")
                 verification = False
         return verification
 
@@ -253,7 +253,7 @@ class Population:
     def print_to_filename_by_species(self, filename):
         outFile = open(filename, "w")
         if not outFile:
-            print "Can't open %s for output." % (filename,)
+            dprint(DEBUG_ERROR, "Can't open %s for output." % (filename,))
             return False
         self.print_to_file_by_species(outFile)
         outFile.close()

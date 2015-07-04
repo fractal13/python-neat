@@ -1,5 +1,11 @@
 import random, math
 
+datadir = "data"
+configdir = datadir + "/config"
+genedir = datadir + "/genes"
+generationdir = datadir + "/gen"
+testdir = datadir + "/testout"
+
 num_trait_params = 8
 
 trait_param_mut_prob = 0.0 # double; 
@@ -181,6 +187,7 @@ def load_neat_params(filename, output):
     
     paramFile = open(filename, "r")
     if not paramFile:
+        dprint(DEBUG_ERROR, "Unable to open file %s." % (filename, ))
         return False
 
         
@@ -240,7 +247,7 @@ def str_to_bool(string):
 def main():
     filenames = [ "p2mpar3bare.ne", "p2nv.ne", "p2test.ne", "params256.ne", "pole2_markov.ne", "test.ne" ]
     for filename in filenames:
-        if not load_neat_params(filename, True):
+        if not load_neat_params(configdir + "/" + filename, True):
             print "LOAD FAILED:"
 
     print "Still need tests for random functions, fsigmod, and hebbian"

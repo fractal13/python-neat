@@ -17,6 +17,6 @@ neat.cpp     - done, still need some tests
 neatmain.cpp - done, except for testing
 *.ne         - done, loading tests done
 experiements.cpp - xor done, pole* not done
+*genes*      - done
 
-Untranslated files:
-*genes*
+
