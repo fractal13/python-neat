@@ -1,6 +1,20 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 from link import Link
+import neat
 
 class Gene:
+
+    def deep_string(self):
+        return str(self) + "\n"
+
+    def __str__(self):
+        s = "Gene "
+        s += str(self.lnk)
+        s += " i:%g m:%g e:%s f:%s" % (self.innovation_num, self.mutation_num, self.enable, self.frozen)
+        return s
     
     def __init__(self):
         self.lnk = None # Link object
@@ -44,10 +58,10 @@ class Gene:
         inodenum = int(parts[1])
         onodenum = int(parts[2])
         weight = float(parts[3])
-        recur = bool(parts[4])
+        recur = neat.str_to_bool(parts[4])
         self.innovation_num = float(parts[5])
         self.mutation_num = float(parts[6])
-        self.enable = bool(parts[7])
+        self.enable = neat.str_to_bool(parts[7])
 
         # find relevant trait
         if traitnum == 0:

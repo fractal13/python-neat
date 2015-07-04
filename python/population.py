@@ -1,3 +1,7 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 import neat
 from genome import Genome
 from organism import Organism
@@ -37,7 +41,7 @@ class Population:
         self.winnergen = 0
         self.highest_fitness = 0.0
         self.highest_last_changed = 0
-        self.spawn(g,size)
+        self.spawn(g, size)
         return
 
     #// Construct off of a single spawning Genome without mutation
@@ -138,7 +142,9 @@ class Population:
     def verify(self):
         verification = True
         for curorg in self.organisms:
-            verification = verification and curorg.gnome.verify()
+            if not curorg.gnome.verify():
+                dprint(DEBUG_ERROR, "Genome verification failed")
+                verification = False
         return verification
 
     # bool clone(Genome *g,int size, float power);

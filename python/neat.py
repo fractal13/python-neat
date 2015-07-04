@@ -97,7 +97,7 @@ def gaussrand():
 # // the old output and some other node. 
 # // When not right-shifted, the steepened slope is closest to a linear
 # // ascent as possible between -0.5 and 0.5
-def fsigmod(activesum, slope, constant):
+def fsigmoid(activesum, slope, constant):
     return (1/(1+(math.exp(-(slope*activesum))))); #Compressed
     
 # // Hebbian Adaptation Function
@@ -220,6 +220,23 @@ def load_neat_params(filename, output):
     return True
 
 
+def str_to_bool(string):
+    if string.lower() == "true":
+        return True
+    if string.lower() == "false":
+        return False
+    if string == "0":
+        return False
+    if string == "1":
+        return True
+    try:
+        if int(string) == 0:
+            return False
+        else:
+            return True
+    except:
+        return False
+    
 def main():
     filenames = [ "p2mpar3bare.ne", "p2nv.ne", "p2test.ne", "params256.ne", "pole2_markov.ne", "test.ne" ]
     for filename in filenames:

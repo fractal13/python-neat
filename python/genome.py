@@ -38,6 +38,19 @@ class Genome:
         self.phenotype = None # Network, Allows Genome to be matched with its Network
         return
 
+    def deep_string(self):
+        s = "Genome[%d]:start\n" % (self.genome_id, )
+        for curtrait in self.traits:
+            s += curtrait.deep_string()
+        for curnode in self.nodes:
+            s += curnode.deep_string()
+        for curgene in self.genes:
+            s += curgene.deep_string()
+        if self.phenotype:
+            s += self.phenotype.deep_string()
+        s += "Genome[%d]:end\n" % (self.genome_id, )
+        return s
+        
     ##//Constructor which takes full genome specs and puts them into the new one
     def SetFromSpecs(self, gid, traits, nodes, genes):
         self.genome_id = gid
@@ -84,7 +97,7 @@ class Genome:
             curnode.dup = newnode
             self.nodes.append(newnode)
         
-        # duplicaate Genes
+        # duplicate Genes
         for curgene in other.genes:
             inode = curgene.lnk.in_node.dup
             onode = curgene.lnk.out_node.dup
@@ -420,12 +433,12 @@ class Genome:
 
             # Placement
             if curnode.gen_node_label == NNode.INPUT:
-                inlist.append(curnode)
+                inlist.append(newnode)
             elif curnode.gen_node_label == NNode.BIAS:
-                inlist.append(curnode)
+                inlist.append(newnode)
             elif curnode.gen_node_label == NNode.OUTPUT:
-                outlist.append(curnode)
-            all_list.append(curnode)
+                outlist.append(newnode)
+            all_list.append(newnode)
 
             # track generation for later use
             curnode.analogue = newnode
@@ -579,6 +592,7 @@ class Genome:
                     found = True
                     break
             if not found:
+                dprint(DEBUG_ERROR, "inode not found")
                 return False
                 
             found = False
@@ -587,12 +601,30 @@ class Genome:
                     found = True
                     break
             if not found:
+                dprint(DEBUG_ERROR, "onode not found")
+                return False
+
+            if len(inode.outgoing) == 0:
+                dprint(DEBUG_ERROR, "genome:", self.deep_string())
+                dprint(DEBUG_ERROR, "inode:", inode.deep_string())
+                dprint(DEBUG_ERROR, "onode:", onode.deep_string())
+                dprint(DEBUG_ERROR, "gene:", curgene.deep_string())
+                dprint(DEBUG_ERROR, "inode.outgoing = []")
+                return False
+            if len(onode.incoming) == 0:
+                dprint(DEBUG_ERROR, "genome:", self)
+                dprint(DEBUG_ERROR, "inode:", inode.deep_string())
+                dprint(DEBUG_ERROR, "onode:", onode.deep_string())
+                dprint(DEBUG_ERROR, "gene:", curgene.deep_string())
+                dprint(DEBUG_ERROR, curgene.deep_string())
+                dprint(DEBUG_ERROR, "onode.incoming = []")
                 return False
 
         # Check nodes are in order
         last_id = 0
         for curnode in self.nodes:
             if curnode.node_id < last_id:
+                dprint(DEBUG_ERROR, "node_id out of order")
                 return False
             last_id = curnode.node_id
 

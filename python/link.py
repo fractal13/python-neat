@@ -1,7 +1,23 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 import neat
 
 class Link:
 
+    def __str__(self):
+        if self.in_node:
+            in_id = self.in_node.node_id
+        else:
+            in_id = 0
+        if self.out_node:
+            out_id = self.out_node.node_id
+        else:
+            out_id = 0
+        s = "Link[%d:%d] w:%g" % (in_id, out_id, self.weight)
+        return s
+    
     def __init__(self):
         self.weight = 0.0   # float weight of connection
         self.in_node = None # NNode input into the link

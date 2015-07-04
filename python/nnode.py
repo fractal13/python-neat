@@ -1,3 +1,7 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
 import neat
 
 class NNode:
@@ -22,7 +26,31 @@ class NNode:
     # Function types
     SIGMOID = 0
 
+    def deep_string(self):
+        return str(self) + "\n"
     
+    def __str__(self):
+        typ = "TYPE?"
+        if self.type == NNode.NEURON:
+            typ = "NEURON"
+        elif self.type == NNode.SENSOR:
+            typ = "SENSOR"
+
+        label = "LABEL?"
+        if self.gen_node_label == NNode.HIDDEN:
+            label = "HIDDEN"
+        elif self.gen_node_label == NNode.INPUT:
+            label = "INPUT"
+        elif self.gen_node_label == NNode.OUTPUT:
+            label = "OUTPUT"
+        elif self.gen_node_label == NNode.BIAS:
+            label = "BIAS"
+        
+        s = "NNode[%d] %s %s ac:%d af:%s inc:%d outg:%d" \
+            % (self.node_id, label, typ, int(self.activation_count),
+               str(self.active_flag), len(self.incoming), len(self.outgoing))
+        return s
+        
     def __init__(self):
 	self.activation_count = 0; # Inactive upon creation
 	self.last_activation = 0.0
@@ -90,7 +118,7 @@ class NNode:
                 if traits[i].trait_id == traitnum:
                     break
             self.nodetrait = traits[i]
-            self.trait_id = self.node_trait.trait_id
+            self.trait_id = self.nodetrait.trait_id
         return
         
 
@@ -238,14 +266,15 @@ class NNode:
     def depth(self, d, mynet):
         mx = d
 
-        if d > 100:
+        if d > 10:
+            dprint(DEBUG_ERROR, "Potential network loop discovered.")
             return 10
 
         if self.type == NNode.SENSOR:
             return d
         else:
-            for i in range(len(self.incoming)):
-                cur_depth = self.incoming[i].in_node.depth(d+1,mynet)
+            for curlink in self.incoming:
+                cur_depth = curlink.in_node.depth(d+1,mynet)
                 if cur_depth > mx:
                     mx = cur_depth
             return mx

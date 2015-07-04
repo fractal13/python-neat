@@ -1,3 +1,8 @@
+from utils import matching_import
+from debug import dprint
+import debug
+matching_import("DEBUG_.*", debug, globals())
+
 class Organism:
 
     def __init__(self):

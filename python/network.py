@@ -22,11 +22,17 @@ class Network:
         return
 
     def __str__(self):
-        s = "Network[%d] numnodes:%d numlinks:%d all_nodes:%d input_iter:%d genotype:%s name:%s inputs:%d outputs:%d maxweight:%f adaptable:%s" \
+        gid = 0
+        if self.genotype:
+            gid = self.genotype.genome_id
+            
+        s = "Network[%d] numnodes:%d ffnumlinks:%d all_nodes:%d input_iter:%d genotype:%d name:%s inputs:%d outputs:%d maxweight:%f adaptable:%s" \
             % (self.net_id, self.numnodes, self.numlinks, len(self.all_nodes), self.input_iter,
-               str(self.genotype), self.name, len(self.inputs), len(self.outputs),
+               int(gid), self.name, len(self.inputs), len(self.outputs),
                self.maxweight, str(self.adaptable))
         return s
+    def deep_string(self):
+        return str(self) + "\n"
 
     def verify(self):
         if len(self.outputs) == 0:
@@ -150,7 +156,7 @@ class Network:
                                                               curlink.params[0], curlink.params[1],
                                                               curlink.params[2])
         
-        return
+        return True
 
     def show_activation(self):
         count = 1
@@ -244,7 +250,7 @@ class Network:
         fout.close()
         return
 
-    # Find the maximum  number of neurons between an output and an input
+    # Find the maximum number of neurons between an output and an input
     def max_depth(self):
         mx = 0
         for o in self.outputs:

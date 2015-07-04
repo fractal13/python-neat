@@ -21,6 +21,13 @@ class Trait:
     // self.params[]
     """
 
+    def deep_string(self):
+        s = "Trait[%d]" % (self.trait_id, )
+        for p in self.params:
+            s += " %g" % (float(p),)
+        s += "\n"
+        return s
+    
     # Constructor
     def __init__(self):
         self.trait_id = 0

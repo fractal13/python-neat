@@ -4,7 +4,7 @@ import debug
 matching_import("DEBUG_.*", debug, globals())
 
 import neat
-from genome import Genome
+from genome import Genome, print_Genome_tofile
 from population import Population
 
 #//Perform evolution on XOR, for gens generations
@@ -63,7 +63,8 @@ def xor_test(gens):
         pop.SetFromGenome(start_genome, neat.pop_size)
       
         print "Verifying Spawned Pop"
-        pop.verify()
+        if not pop.verify():
+            dprint(DEBUG_ERROR, "Population verification failed")
 
         #// evolve up to gens generations
         for gen in range(1, gens+1):
@@ -76,7 +77,7 @@ def xor_test(gens):
                 evals[expcount] = neat.pop_size * (gen-1) + winnernum[0]
                 genes[expcount] = winnergenes[0]
                 nodes[expcount] = winnernodes[0]
-                gen = gens
+                break
 
         # end of generation loop
     # end of num_runs loop
