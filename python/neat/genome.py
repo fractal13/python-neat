@@ -631,15 +631,16 @@ class Genome:
             last_id = curnode.node_id
 
         # Check for duplicate genes
-        for curgene in self.genes:
-            for curgene2 in self.genes:
-                if ((curgene != curgene2) and
-                    ((curgene.lnk.is_recurrent == curgene2.lnk.is_recurrent) and
-                     (curgene.lnk.in_node.node_id == curgene2.lnk.in_node.node_id) and
-                     (curgene.lnk.out_node.node_id == curgene2.lnk.out_node.node_id))):
-                    pass
-                    #print "ALERT: Duplicate Genes"
-                    #return False
+        if len(self.genes) < 100:
+            for curgene in self.genes:
+                for curgene2 in self.genes:
+                    if ((curgene != curgene2) and
+                        ((curgene.lnk.is_recurrent == curgene2.lnk.is_recurrent) and
+                         (curgene.lnk.in_node.node_id == curgene2.lnk.in_node.node_id) and
+                         (curgene.lnk.out_node.node_id == curgene2.lnk.out_node.node_id))):
+                        pass
+                        #print "ALERT: Duplicate Genes"
+                        #return False
 
         # 2 disables in a row?
         # not necessarily bad
