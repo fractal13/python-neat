@@ -184,6 +184,7 @@ class Population:
         #//Create size copies of the Genome
         #//Start with perturbed linkweights
         for count in range(1, size+1):
+            dprint(DEBUG_INFO, "Creating organism %d" % (count, ))
             new_genome = g.duplicate(count)
             new_genome.mutate_link_weights(1.0, 1.0, Genome.COLDGAUSSIAN)
             new_genome.randomize_traits()
