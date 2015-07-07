@@ -131,19 +131,19 @@ class Board:
             if self.winner == self.this_player:
                 score += GAME_WIN_SCORE
             elif self.winner == self.other_player:
-                score -= GAME_WIN_SCORE
+                score += GAME_WIN_SCORE
         else:
             for board in range(9):
                 if self.board_owners[board] == self.this_player:
                     score += BOARD_WIN_SCORE
                 elif self.board_owners[board] == self.other_player:
-                    score -= BOARD_WIN_SCORE
+                    score += BOARD_WIN_SCORE
                 else:
                     for position in range(9):
                         if self.markers[board][position] == self.this_player:
                             score += POSITION_WIN_SCORE
                         elif self.markers[board][position] == self.other_player:
-                            score -= POSITION_LOSE_SCORE
+                            score += POSITION_LOSE_SCORE
         return score
 
     def LegalMoves(self):
