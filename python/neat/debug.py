@@ -1,9 +1,13 @@
+import sys
+
 DEBUG_ERROR = 1
+DEBUG_INFO = 2
 DEBUG_ALGO = 4
 DEBUG_FILEINPUT = 8
 DEBUG_INTEGRITY = 16
 
 g_header = { DEBUG_ERROR: "ERR",
+             DEBUG_INFO: "INF",
              DEBUG_ALGO: "ALG",
              DEBUG_FILEINPUT: "FIO",
              DEBUG_INTEGRITY: "ING",
@@ -11,6 +15,7 @@ g_header = { DEBUG_ERROR: "ERR",
 
 debug_level = (0 | \
                DEBUG_ERROR | \
+               DEBUG_INFO | \
 #               DEBUG_ALGO | \
 #               DEBUG_FILEINPUT | \
 #               DEBUG_INTEGRITY | \
@@ -29,6 +34,7 @@ def dprint(level, *args):
         for a in args:
             s += " " + str(a)
         print s
+        sys.stdout.flush()
     return
 
 def dcallstack(level):
