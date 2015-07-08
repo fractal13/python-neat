@@ -72,9 +72,9 @@ def uttt_test(gens):
 
         #// evolve up to gens generations
         for gen in range(1, gens+1):
-            dprint(DEBUG_INFO, "Verifying Spawned Population[%d] Epoch[%d]" % (expcount, gen))
-            if not pop.verify():
-                dprint(DEBUG_ERROR, "Population[%d] Epoch[%d] verification failed" % (expcount, gen))
+            dprint(DEBUG_INFO, "Evaluating Spawned Population[%d] Epoch[%d]" % (expcount, gen))
+            # if not pop.verify():
+            #     dprint(DEBUG_ERROR, "Population[%d] Epoch[%d] verification failed" % (expcount, gen))
 
             #print "Epoch", gen
             generation_filename = neatconfig.generationdir + "/utttgen_%d" % (gen,)
@@ -129,7 +129,7 @@ def uttt_test(gens):
 
 # evaluates the Organism's performance on sample problems
 # bool uttt_evaluate(Organism *org) {
-def uttt_evaluate(org):
+def uttt_evaluate(org, generation):
     #
     # Run this network, and get its fitness value
     #
@@ -148,7 +148,7 @@ def uttt_evaluate(org):
                   '--genome-file', 'genome.txt', '--ai-type', 'genomelearn' ]
     #cmd2 = "python ./uttt_main.py --user fred --password dino123 --ai --ai-level 5 --no-gui --ai-type 'minimax'"
     cmd2_argv = [ './uttt_main.py', '--user', 'fred', '--password', 'dino123', '--ai', 'full',
-                  '--ai-level', '5', '--no-gui', '--ai-type', 'minimax' ]
+                  '--ai-level', '1', '--no-gui', '--ai-type', 'minimax' ]
     # run two child processes, and wait for result
 
     ### Spawn children to play the game
@@ -167,8 +167,11 @@ def uttt_evaluate(org):
 
     #
     fin = open("results.txt", "r")
-    board_utility = float(fin.readline().strip())
-    fin.close()
+    if fin:
+        board_utility = float(fin.readline().strip())
+        fin.close()
+    else:
+        board_utility = 0.0
     os.chdir(pwd)
 
     #
@@ -179,7 +182,7 @@ def uttt_evaluate(org):
     org.fitness = (2.0 - errorsum) ** 2
     org.error = errorsum
 
-    dprint(DEBUG_INFO, "Org", org.gnome.genome_id,
+    dprint(DEBUG_INFO, "Org[%03d]Epoch[%04d]" % (int(org.gnome.genome_id), int(generation)),
            " error: %7.5f  fitness: %7.5f  utility: %7.5f" % (errorsum, org.fitness, board_utility))
 
     if org.fitness >= 3.9:
@@ -196,7 +199,7 @@ def uttt_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
 
     #//Evaluate each organism on a test
     for curorg in pop.organisms:
-        if uttt_evaluate(curorg):
+        if uttt_evaluate(curorg, generation):
             win = True
             winnernum[0] = curorg.gnome.genome_id
             winnergenes[0] = curorg.gnome.extrons()
@@ -243,7 +246,7 @@ def uttt_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
 
 def main():
     neat.load_neat_params(neatconfig.configdir + "/uttt.ne", True)
-    p = uttt_test(100)
+    p = uttt_test(1000)
     p = None
     return
     
