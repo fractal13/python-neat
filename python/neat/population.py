@@ -6,7 +6,7 @@ import neat
 from genome import Genome
 from organism import Organism
 from species import Species, order_species_key
-
+import re
 
 class Population:
 
@@ -93,6 +93,7 @@ class Population:
         self.cur_innov_num = 0.0
         curwordnum = 0
 
+        dprint(DEBUG_FILEINPUT, "Opening population file %s." % (filename, ))
         iFile = open(filename, "r")
         if not iFile:
             dprint(DEBUG_ERROR, "Can't open genomes file for input %s." % (filename, ))
@@ -105,8 +106,15 @@ class Population:
             curline = iFile.readline()
             if not curline:
                 break
+            dprint(DEBUG_FILEINPUT, "line: %s." % (curline.strip(), ))
             words = curline.strip().split()
+            dprint(DEBUG_FILEINPUT, "words: %s." % (":".join(words), ))
+            if len(words) == 0:
+                continue
+            if re.search('^\s*#', words[0]):
+                continue
             if words[0] == "genomestart":
+                dprint(DEBUG_FILEINPUT, "genomestart")
                 idcheck = int(words[1])
                 if not md:
                     metadata = ""
@@ -133,8 +141,10 @@ class Population:
                     word_i += 1
             # end of conditional processing
         # end of while True
+        dprint(DEBUG_FILEINPUT, "End of file.")
         iFile.close()
         self.speciate()
+        dprint(DEBUG_FILEINPUT, "Done.")
         return
 
     #// Run verify on all Organisms in this Population (Debugging)
