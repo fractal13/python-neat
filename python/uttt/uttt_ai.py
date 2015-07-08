@@ -3,7 +3,7 @@ sys.path.append('..')
 import neat
 import uttt_data
 import Queue
-import time, random
+import time, random, os
 
 
 class Board:
@@ -131,13 +131,13 @@ class Board:
             if self.winner == self.this_player:
                 score += GAME_WIN_SCORE
             elif self.winner == self.other_player:
-                score += GAME_WIN_SCORE
+                score += GAME_LOSE_SCORE
         else:
             for board in range(9):
                 if self.board_owners[board] == self.this_player:
                     score += BOARD_WIN_SCORE
                 elif self.board_owners[board] == self.other_player:
-                    score += BOARD_WIN_SCORE
+                    score += BOARD_LOSE_SCORE
                 else:
                     for position in range(9):
                         if self.markers[board][position] == self.this_player:
@@ -178,6 +178,8 @@ class UTTTAI:
         self.ai_type = ai_type
         self.ai_mode = ai_mode
         if (self.ai_type == 'genome' or self.ai_type == 'genomelearn'):
+            if self.ai_type == 'genomelearn':
+                os.remove(self.results_file)
             print "ai_type:", self.ai_type
             self.LoadGenome()
         elif self.ai_type == 'minimax':
@@ -229,15 +231,25 @@ class UTTTAI:
         inv = [ 1. ] # BIAS
 
         # markers
-        # 0.0 = other player's
-        # 0.5 = unplayed
-        # 1.0 = mine
+        # first 81 = other player's
+        # second 81 = mine
         #
         for b in range(9):
             for p in range(9):
                 m = board.GetMarker(b, p)
                 if m == uttt_data.PLAYER_N:
-                    v = 0.5
+                    v = 0.0
+                elif m == me:
+                    v = 0.0
+                else:
+                    v = 1.0
+                inv.append(v)
+
+        for b in range(9):
+            for p in range(9):
+                m = board.GetMarker(b, p)
+                if m == uttt_data.PLAYER_N:
+                    v = 0.0
                 elif m == me:
                     v = 1.0
                 else:
@@ -278,14 +290,14 @@ class UTTTAI:
         b = max_i
         
         # choose the position
-        max_i = 0
+        max_i = 9
         max_v = net.outputs[9].activation
         for i in range(10,18):
             if ((max_v < net.outputs[i].activation) or
                 ((max_v == net.outputs[i].activation) and (random.random() > 0.5))):
                 max_i = i
                 max_v = net.outputs[i].activation
-        p = max_i
+        p = max_i - 9
         move = (b, p)
 
         # clear the network to be ready for next turn
