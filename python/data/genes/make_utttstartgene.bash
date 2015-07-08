@@ -14,7 +14,7 @@ trait 3 0.3 0 0 0 0 0 0 0
 EOF
 
 num_bias=1      # need a bias ?
-num_input=90    # 81 each board position 0.0 = you, 0.5 = none, 1.0 = me   +  9 for which is next board to play on
+num_input=171   # 81 each board position for you, 81 each board position me + 9 for which is next board to play on
 num_output=18   # 9 for which board, 9 for which position
 # BIAS
 a=1
