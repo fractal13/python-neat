@@ -179,7 +179,8 @@ class UTTTAI:
         self.ai_mode = ai_mode
         if (self.ai_type == 'genome' or self.ai_type == 'genomelearn'):
             if self.ai_type == 'genomelearn':
-                os.remove(self.results_file)
+                if os.path.exists(self.results_file):
+                    os.remove(self.results_file)
             print "ai_type:", self.ai_type
             self.LoadGenome()
         elif self.ai_type == 'minimax':

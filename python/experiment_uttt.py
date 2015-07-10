@@ -109,6 +109,7 @@ def uttt_test(config):
             # in case we want to change after run has started
             config = uttt_read_config(neatconfig.configdir + '/uttt.config')
             gens = config['max_generations']
+            gen += 1
 
         # end of generation loop
         if g_found_optimal:
@@ -167,8 +168,10 @@ def uttt_evaluate(org, generation, config):
     while do_evaluate:
         results_file = config['results_file']
         genome_file = config['genome_file']
-        os.remove(results_file)
-        os.remove(genome_file)
+        if os.path.exists(results_file):
+            os.remove(results_file)
+        if os.path.exists(genome_file):
+            os.remove(genome_file)
 
         org.gnome.print_to_filename(genome_file)
 
@@ -215,8 +218,10 @@ def uttt_evaluate(org, generation, config):
             board_utility = 0.0
             do_evaluate = True
         #
-        os.remove(results_file)
-        os.remove(genome_file)
+        if os.path.exists(results_file):
+            os.remove(results_file)
+        if os.path.exists(genome_file):
+            os.remove(genome_file)
         # end of while do_evaluate
     os.chdir(pwd)
 
