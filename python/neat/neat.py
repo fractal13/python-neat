@@ -199,8 +199,10 @@ def load_neat_params(filename, output):
         line = line.strip()
         if line == "":
             continue
+        if line[0] == "#":
+            continue
         words = line.split()
-        if len(words) != 2:
+        if len(words) < 2:
             print "Unknown parameter line: %" % (line)
             continue
         param_name = words[0]
