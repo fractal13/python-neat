@@ -221,40 +221,34 @@ class Population:
 
         #//Step through all existing organisms
         for curorg in self.organisms:
+            
             #//For each organism, search for a species it is compatible to
             cur_species_i = 0
-            if cur_species_i >= len(self.species):
+            found = False
+            while (cur_species_i < len(self.species)) and (not found):
+                comporg = self.species[cur_species_i].first()
+                if comporg is None:
+                    #//Keep searching for a matching species
+                    cur_species_i += 1
+                elif curorg.gnome.compatibility(comporg.gnome) < neat.compat_threshold:
+                    #//Found compatible species, so add this organism to it
+                    self.species[cur_species_i].add_Organism(curorg)
+                    curorg.species = self.species[cur_species_i]
+                    found = True
+                else:
+                    #//Keep searching for a matching species
+                    cur_species_i += 1
+
+            #//If we didn't find a match, create a new species
+            if not found:
                 newspecies = Species()
                 counter += 1
                 newspecies.SetFromId(counter)
                 self.species.append(newspecies)
                 newspecies.add_Organism(curorg)
                 curorg.species = newspecies
-            else:
-                curspecies = self.species[cur_species_i]
-                comporg = curspecies.first()
-                while (comporg is not None) and (cur_species_i < len(self.species)):
-                    if curorg.gnome.compatibility(comporg.gnome) < neat.compat_threshold:
-                        #//Found compatible species, so add this organism to it
-                        curspecies.add_Organism(curorg)
-                        curorg.species = curspecies
-                        comporg = None  #//Note the search is over
-                    else:
-                        #//Keep searching for a matching species
-                        cur_species_i += 1
-                        if cur_species_i < len(self.species):
-                            curspecies = self.species[cur_species_i]
-                            comporg = curspecies.first()
-                # end while looking for species
-                #//If we didn't find a match, create a new species
-                if comporg is not None:
-                    newspecies = Species()
-                    counter += 1
-                    newspecies.SetFromId(counter)
-                    self.species.append(newspecies)
-                    newspecies.add_Organism(curorg)
-                    curorg.species = newspecies
             # end species search conditions
+
         # end organism loop
         self.last_species = counter
         return True
@@ -322,7 +316,7 @@ class Population:
             curspecies_i -= 1
         if generation % 30 == 0 and sorted_species[curspecies_i].age >= 20:
             sorted_species[curspecies_i].obliterate = True
-            dprint(DEBUG_INFO, "Obliterating species raned %d." % (curspecies_i, ))
+            dprint(DEBUG_INFO, "Obliterating species ranked %d." % (curspecies_i, ))
 
         #//Use Species' ages to modify the objective fitness of organisms
         #// in other words, make it more fair for younger species
