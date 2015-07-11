@@ -7,6 +7,7 @@ matching_import("DEBUG_.*", debug, globals())
 import neat
 #neat.debug.debug_level = neat.debug.debug_level | neat.debug.DEBUG_FILEINPUT
 from neat import Genome, print_Genome_tofile, Population
+from neat.species import order_species_key
 import neat.neat as neatconfig
 from multiprocessing import Process, Queue
 
@@ -272,6 +273,13 @@ def uttt_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
         curspecies.compute_average_fitness()
         curspecies.compute_max_fitness()
 
+    if debug.is_set(DEBUG_CHK):
+        sorted_species = [ curspecies for curspecies in pop.species ]
+        sorted_species.sort(key=order_species_key)
+        for curspecies in sorted_species:
+            dprint(DEBUG_CHK, "Species[%d] avefit: %7.5f maxfit: %7.5f age: %4.1f lastimprove: %4.1f numorg: %d" % \
+                   (int(curspecies.id), float(curspecies.ave_fitness), float(curspecies.max_fitness),
+                    float(curspecies.age), float(curspecies.age_of_last_improvement), len(curspecies.organisms)))
 
     #//Only print to file every print_every generations
     if win or ((generation % neatconfig.print_every) == 0):
