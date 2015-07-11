@@ -40,18 +40,24 @@ done
 # # LINKS (all BIAS/INPUT to all OUTPUT)
 # ((a = 1))
 # ((b = num_bias + num_input))
-# for i in `seq $a $b`; do
-#     ((c = num_bias + num_input + 1))
-#     ((d = num_bias + num_input + num_output))
-#     for j in `seq $c $d`; do
-# 	echo gene $trait $i $j 0.0 0 $innov 0 1 >> $file;
-# 	((innov = innov + 1));
-# 	((trait = trait + 1));
-# 	if [ $trait -gt 3 ]; then
-# 	    trait=1;
-# 	fi;
-#     done;
-# done
+# ((c = num_bias + num_input + 1))
+# ((d = num_bias + num_input + num_output))
+
+# LINKS (from BIAS to all OUTPUT)
+((a = 1))
+((b = 1))
+((c = num_bias + num_input + 1))
+((d = num_bias + num_input + num_output))
+for i in `seq $a $b`; do
+    for j in `seq $c $d`; do
+	echo gene $trait $i $j 0.0 0 $innov 0 1 >> $file;
+	((innov = innov + 1));
+	((trait = trait + 1));
+	if [ $trait -gt 3 ]; then
+	    trait=1;
+	fi;
+    done;
+done
 
 # TAIL
 echo genomeend 1 >> $file
