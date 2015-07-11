@@ -5,12 +5,14 @@ DEBUG_INFO = 2
 DEBUG_ALGO = 4
 DEBUG_FILEINPUT = 8
 DEBUG_INTEGRITY = 16
+DEBUG_CHECK = 32
 
 g_header = { DEBUG_ERROR: "ERR",
              DEBUG_INFO: "INF",
              DEBUG_ALGO: "ALG",
              DEBUG_FILEINPUT: "FIO",
              DEBUG_INTEGRITY: "ING",
+             DEBUG_CHECK: "CHK",
              }
 
 debug_level = (0 | \
@@ -19,6 +21,7 @@ debug_level = (0 | \
 #               DEBUG_ALGO | \
 #               DEBUG_FILEINPUT | \
 #               DEBUG_INTEGRITY | \
+               DEBUG_CHECK | \
                0 )
 
 import inspect

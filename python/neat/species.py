@@ -99,6 +99,11 @@ class Species:
             curorg.fitness = curorg.fitness / len(self.organisms)
 
         self.organisms.sort(key=order_orgs_key)
+        if debug.is_set(DEBUG_CHECK):
+            for i in range(1, len(self.organisms)):
+                if self.organisms[i-1].fitness < self.organisms[i].fitness:
+                    dprint(DEBUG_CHECK, "sorted organisms out of order %7.5f < %7.5f." % (self.organisms[i-1].fitness,
+                                                                                          self.organisms[i].fitness))
 
         if self.organisms[0].orig_fitness > self.max_fitness_ever:
             self.max_fitness_ever = self.organisms[0].orig_fitness

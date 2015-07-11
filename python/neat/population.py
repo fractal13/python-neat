@@ -306,6 +306,13 @@ class Population:
         #//Sort the Species by max fitness (Use an extra list to do this)
         #//These need to use ORIGINAL fitness
         sorted_species.sort(key=order_species_key)
+        if debug.is_set(DEBUG_CHECK):
+            for i in range(1, len(sorted_species)):
+                if sorted_species[i-1].organisms[0].orig_fitness < sorted_species[i].organisms[0].orig_fitness:
+                    dprint(DEBUG_CHECK, "sorted_species out of order %7.5f < %7.5f." % (sorted_species[i-1].organisms[0].orig_fitness,
+                                                                                        sorted_species[i].organisms[0].orig_fitness))
+                    
+                                                                                        
 
         #//Flag the lowest performing species over age 20 every 30 generations 
         #//NOTE: THIS IS FOR COMPETITIVE COEVOLUTION STAGNATION DETECTION
@@ -344,6 +351,7 @@ class Population:
             skim = curspecies.count_offspring(skim)
             total_expected += curspecies.expected_offspring
 
+        dprint(DEBUG_CHECK, "Total Expected = %7.5f  Total Organisms = %d" % (float(total_expected), total_organisms))
         #//Need to make up for lost foating point precision in offspring assignment
         #//If we lost precision, give an extra baby to the best Species
         if total_expected < total_organisms:
@@ -367,6 +375,7 @@ class Population:
             #//If the average fitness is allowed to hit 0, then we no longer have 
             #//an average we can use to assign offspring.
             if final_expected < total_organisms:
+                dprint(DEBUG_INFO, "Problem with final_expected = %d, keeping only the best_species" % (final_expected, ))
                 for curspecies in self.species:
                     curspecies.expected_offspring = 0
                 best_species.expected_offspring = total_organisms
@@ -377,6 +386,11 @@ class Population:
         #//These need to use ORIGINAL fitness
         sorted_species.sort(key=order_species_key)
         best_species_num = sorted_species[0].id
+        if debug.is_set(DEBUG_CHECK):
+            for i in range(1, len(sorted_species)):
+                if sorted_species[i-1].organisms[0].orig_fitness < sorted_species[i].organisms[0].orig_fitness:
+                    dprint(DEBUG_CHECK, "sorted_species out of order %7.5f < %7.5f." % (sorted_species[i-1].organisms[0].orig_fitness,
+                                                                                        sorted_species[i].organisms[0].orig_fitness))
 
         #//Check for Population-level stagnation
         curspecies = sorted_species[0]
@@ -389,6 +403,7 @@ class Population:
 
         #//Check for stagnation- if there is stagnation, perform delta-coding
         if self.highest_last_changed >= neat.dropoff_age + 5:
+            dprint(DEBUG_INFO, "Stagnation in highest fitness.")
             self.highest_last_changed = 0
             half_pop = neat.pop_size/2
             curspecies_i = 0
@@ -398,6 +413,7 @@ class Population:
             curspecies.age_of_last_improvement = curspecies.age
             curspecies_i += 1
             if curspecies_i < len(sorted_species):
+                dprint(DEBUG_INFO, "Stagnation: reducing to top two species.")
                 curspecies = sorted_species[curspecies_i]
                 curspecies.organisms[0].super_champ_offspring = neat.pop_size - half_pop
                 curspecies.expected_offspring = neat.pop_size - half_pop
@@ -410,6 +426,7 @@ class Population:
                     curspecies_i += 1
                 #
             else:
+                dprint(DEBUG_INFO, "Stagnation: reducing to top one species.")
                 curspecies_i = 0
                 curspecies = sorted_species[curspecies_i]
                 curspecies.organisms[0].super_champ_offspring += neat.pop_size - half_pop
@@ -592,6 +609,9 @@ class Population:
                 #//Go through the organisms of the curspecies and add them to 
                 #//the master list
                 for curorg in curspecies.organisms:
+                    if debug.is_set(DEBUG_CHECK):
+                        if curorg.eliminate:
+                            dprint(DEBUG_ERROR, "elminated organism still here")
                     curorg.gnome.genome_id = orgcount
                     orgcount += 1
                     self.organisms.append(curorg)
