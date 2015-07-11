@@ -311,6 +311,7 @@ class Population:
                 if sorted_species[i-1].organisms[0].orig_fitness < sorted_species[i].organisms[0].orig_fitness:
                     dprint(DEBUG_CHECK, "sorted_species out of order %7.5f < %7.5f." % (sorted_species[i-1].organisms[0].orig_fitness,
                                                                                         sorted_species[i].organisms[0].orig_fitness))
+            dprint(DEBUG_CHECK, "Epoch starts with %d species." % (len(self.species), ))
                     
                                                                                         
 
@@ -321,6 +322,7 @@ class Population:
             curspecies_i -= 1
         if generation % 30 == 0 and sorted_species[curspecies_i].age >= 20:
             sorted_species[curspecies_i].obliterate = True
+            dprint(DEBUG_INFO, "Obliterating species raned %d." % (curspecies_i, ))
 
         #//Use Species' ages to modify the objective fitness of organisms
         #// in other words, make it more fair for younger species
@@ -350,6 +352,7 @@ class Population:
         for curspecies in self.species:
             skim = curspecies.count_offspring(skim)
             total_expected += curspecies.expected_offspring
+            dprint(DEBUG_CHECK, "Species id[%d].expected_offspring = %d" % (curspecies.id, int(curspecies.expected_offspring)))
 
         dprint(DEBUG_CHECK, "Total Expected = %7.5f  Total Organisms = %d" % (float(total_expected), total_organisms))
         #//Need to make up for lost foating point precision in offspring assignment
@@ -616,6 +619,7 @@ class Population:
                     orgcount += 1
                     self.organisms.append(curorg)
         self.species = keep_species
+        dprint(DEBUG_CHECK, "Epoch ends with %d species." % (len(self.species), ))
 
         #//Remove the innovations of the current generation
         self.innovations = []

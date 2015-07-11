@@ -1,4 +1,4 @@
-import sys
+import sys, datetime
 
 DEBUG_ERROR = 1
 DEBUG_INFO = 2
@@ -31,9 +31,10 @@ def is_set(level):
 
 def dprint(level, *args):
     if is_set(level):
+        now = datetime.datetime.now().strftime("%Y:%m:%d:%H:%S.%f")
         frame = inspect.currentframe().f_back
         func = inspect.currentframe().f_back.f_code
-        s = "%s %s:%s:%d:" % (g_header[level], func.co_name, func.co_filename.split("/")[-1], frame.f_lineno)
+        s = "%s %s:%s:%s:%d:" % (g_header[level], now, func.co_name, func.co_filename.split("/")[-1], frame.f_lineno)
         for a in args:
             s += " " + str(a)
         print s

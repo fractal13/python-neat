@@ -102,7 +102,7 @@ class Species:
         if debug.is_set(DEBUG_CHECK):
             for i in range(1, len(self.organisms)):
                 if self.organisms[i-1].fitness < self.organisms[i].fitness:
-                    dprint(DEBUG_CHECK, "sorted organisms out of order %7.5f < %7.5f." % (self.organisms[i-1].fitness,
+                    dprint(DEBUG_ERROR, "sorted organisms out of order %7.5f < %7.5f." % (self.organisms[i-1].fitness,
                                                                                           self.organisms[i].fitness))
 
         if self.organisms[0].orig_fitness > self.max_fitness_ever:
@@ -215,6 +215,7 @@ class Species:
             mom = dad = None
 
             if self.organisms[thechamp_i].super_champ_offspring > 0:
+                dprint(DEBUG_CHECK, "super_champ_offspring()")
                 mom_i = thechamp_i
                 mom = self.organisms[mom_i]
                 new_genome = mom.gnome.duplicate(count)
@@ -242,6 +243,7 @@ class Species:
 
                 # super_champ_offspring > 0
             elif (not champ_done) and (self.expected_offspring > 5):
+                dprint(DEBUG_CHECK, "champ()")
                 mom_i = thechamp_i
                 mom = self.organisms[mom_i]
                 new_genome = mom.gnome.duplicate(count)
@@ -252,6 +254,7 @@ class Species:
 
                 # (not champ_done) and (self.expected_offspring > 5)
             elif (neat.randfloat() < neat.mutate_only_prob) or (poolsize == 0):
+                dprint(DEBUG_CHECK, "mutate_only()")
                 mom_i = neat.randint(0, poolsize)
                 mom = self.organisms[mom_i]
                 new_genome = mom.gnome.duplicate(count)
@@ -324,10 +327,13 @@ class Species:
                     outside = True
 
                 if neat.randfloat() < neat.mate_multipoint_prob:
+                    dprint(DEBUG_CHECK, "mate_multipoint()")
                     new_genome = mom.gnome.mate_multipoint(dad.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
                 elif neat.randfloat() < neat.mate_multipoint_avg_prob / (neat.mate_multipoint_avg_prob+neat.mate_singlepoint_prob):
+                    dprint(DEBUG_CHECK, "mate_multipoint_avg()")
                     new_genome = mom.gnome.mate_multipoint_avg(dad.gnome, count, mom.orig_fitness, dad.orig_fitness, outside)
                 else:
+                    dprint(DEBUG_CHECK, "mate_singlepoint()")
                     new_genome = mom.gnome.mate_singlepoint(dad.gnome, count)
 
                 mate_baby = True
@@ -335,6 +341,7 @@ class Species:
                 if ((neat.randfloat() > neat.mate_only_prob) or
                     (dad.gnome.genome_id == mom.gnome.genome_id) or
                     (dad.gnome.compatibility(mom.gnome) == 0.0)):
+                    dprint(DEBUG_CHECK, "mate_and_mutate()")
                     if neat.randfloat() < neat.mutate_add_node_prob:
                         dprint(DEBUG_INTEGRITY, "a: pop.cur_node_id:", pop.cur_node_id)
                         ok, pop.cur_node_id, pop.cur_innov_num = \
@@ -366,6 +373,7 @@ class Species:
                     self.verify_baby(baby, mom, dad)
 
                 else:
+                    dprint(DEBUG_CHECK, "mate_only()")
                     baby = Organism()
                     baby.SetFromGenome(0.0, new_genome, generation)
                     self.verify_baby(baby, mom, dad)
@@ -374,41 +382,29 @@ class Species:
 
             baby.mut_struct_baby = mut_struct_baby
             baby.mate_baby = mate_baby
+            
             curspecies_i = 0
-            if curspecies_i >= len(pop.species):
-                newspecies = Species()
+            found = False
+            while (curspecies_i < len(pop.species)) and (not found):
+                comporg = pop.species[curspecies_i].first()
+                if comporg == None:
+                    curspecies_i += 1
+                elif baby.gnome.compatibility(comporg.gnome) < neat.compat_threshold:
+                    pop.species[curspecies_i].add_Organism(baby)
+                    baby.species = pop.species[curspecies_i]
+                    found = True
+                else:
+                    curspecies_i += 1
+            #
+            if not found:
                 pop.last_species += 1
+                newspecies = Species()
                 newspecies.SetFromIdAndNovel(pop.last_species, True)
                 pop.species.append(newspecies)
                 newspecies.add_Organism(baby)
                 baby.species = newspecies
-                
-            else:
-                comporg = pop.species[curspecies_i].first()
-                found = False
-                while (curspecies_i < len(pop.species)) and (not found):
-                    if comporg == None:
-                        curspecies_i += 1
-                        if curspecies_i < len(pop.species):
-                            comporg = pop.species[curspecies_i].first()
-                    elif baby.gnome.compatibility(comporg.gnome) < neat.compat_threshold:
-                        pop.species[curspecies_i].add_Organism(baby)
-                        baby.species = pop.species[curspecies_i]
-                        found = True
-                    else:
-                        curspecies_i += 1
-                        if curspecies_i < len(pop.species):
-                            comporg = pop.species[curspecies_i].first()
-                #
-                if not found:
-                    newspecies = Species()
-                    pop.last_species += 1
-                    newspecies.SetFromIdAndNovel(pop.last_species, True)
-                    pop.species.append(newspecies)
-                    newspecies.add_Organism(baby)
-                    baby.species = newspecies
                     
-                # else (not first species)
+
             # for count in self.expected_offspring
 
         return True

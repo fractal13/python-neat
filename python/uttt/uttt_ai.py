@@ -145,6 +145,20 @@ class Board:
                         elif self.markers[board][position] == self.other_player:
                             score += POSITION_LOSE_SCORE
         return score
+        
+    def EvaluateTurnsOnly(self):
+        POSITION_WIN_SCORE  =  0.010
+        POSITION_LOSE_SCORE = -0.005
+        BOARD_WIN_SCORE     =  0.100
+        BOARD_LOSE_SCORE    = -0.050
+        GAME_WIN_SCORE      =  1.000
+        GAME_LOSE_SCORE     = -1.000
+        score = 0.
+        for board in range(9):
+            for position in range(9):
+                if self.markers[board][position] == self.this_player:
+                    score += POSITION_WIN_SCORE
+        return score
 
     def LegalMoves(self):
         moves = []
@@ -450,10 +464,10 @@ class UTTTAI:
         print "Final Score:", board.Evaluate()
         if self.ai_type == 'genomelearn':
             fout = open(self.results_file, "w")
-            s = str(board.EvaluateGenome()) + "\n"
+            s = str(board.EvaluateTurnsOnly()) + "\n"
             fout.write(s)
             fout.close()
-            print "GenomeScore:", board.EvaluateGenome()
+            print "TurnsScore:", board.EvaluateTurnsOnly()
         return
 
 
