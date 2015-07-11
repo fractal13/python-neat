@@ -31,7 +31,7 @@ def is_set(level):
 
 def dprint(level, *args):
     if is_set(level):
-        now = datetime.datetime.now().strftime("%Y:%m:%d:%H:%S.%f")
+        now = datetime.datetime.now().strftime("%Y:%m:%d:%H:%M:%S.%f")
         frame = inspect.currentframe().f_back
         func = inspect.currentframe().f_back.f_code
         s = "%s %s:%s:%s:%d:" % (g_header[level], now, func.co_name, func.co_filename.split("/")[-1], frame.f_lineno)
