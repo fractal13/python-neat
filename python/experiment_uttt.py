@@ -273,11 +273,11 @@ def uttt_epoch(pop, generation, filename, winnernum, winnergenes, winnernodes):
         curspecies.compute_average_fitness()
         curspecies.compute_max_fitness()
 
-    if debug.is_set(DEBUG_CHK):
+    if debug.is_set(DEBUG_CHECK):
         sorted_species = [ curspecies for curspecies in pop.species ]
         sorted_species.sort(key=order_species_key)
         for curspecies in sorted_species:
-            dprint(DEBUG_CHK, "Species[%d] avefit: %7.5f maxfit: %7.5f age: %4.1f lastimprove: %4.1f numorg: %d" % \
+            dprint(DEBUG_CHECK, "Species[%d] avefit: %7.5f maxfit: %7.5f age: %4.1f lastimprove: %4.1f numorg: %d" % \
                    (int(curspecies.id), float(curspecies.ave_fitness), float(curspecies.max_fitness),
                     float(curspecies.age), float(curspecies.age_of_last_improvement), len(curspecies.organisms)))
 
