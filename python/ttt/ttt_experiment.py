@@ -157,6 +157,32 @@ def ttt_test(config):
 
     return pop
 
+
+g_test_games = [ ]
+
+def make_test_games():
+    global g_test_games
+    if len(g_test_games) > 0:
+        return
+        
+    g_test_games = [ ]
+    
+    # Empty game
+    g_test_games.append( [] )
+
+    # 1 Move games
+    for i in range(9):
+        g_test_games.append( [ (i, PLAYER_X) ] )
+        
+    # 2 Move games
+    for i in range(9):
+        for j in range(9):
+            if i == j:
+                continue
+            g_test_games.append( [ (i, PLAYER_X), (j, PLAYER_O) ] )
+
+    return 
+
 def evaluate_fullgame(org, generation, config):
     #
     # Run this network, and get its fitness value
@@ -166,22 +192,35 @@ def evaluate_fullgame(org, generation, config):
     os.chdir(prog_dir)
 
     total_utility = 0.0
-    for i in range(config['games_per_eval']):
-        if random.random() < 0.5:
-            me = p1 = TTTGenomePlayer(PLAYER_X, org)
-            p2 = TTTMinimaxPlayer(PLAYER_O, config['minimax_level'])
-        else:
-            p1 = TTTMinimaxPlayer(PLAYER_X, config['minimax_level'])
-            me = p2 = TTTGenomePlayer(PLAYER_O, org)
+    total_count = 0.0
 
-        g = TTTGame(p1, p2)
-        if not g.GameLoop():
-            dprint(DEBUG_ERROR, "g.GameLoop() failed.")
-            return False
+    for test_game in g_test_games:
 
-        total_utility += me.Utility( g.GetBoard() )
+        for order in (0, 1):
+        
+            if order == 0:
+                me = p1 = TTTGenomePlayer(PLAYER_X, org)
+                p2 = TTTMinimaxPlayer(PLAYER_O, config['minimax_level'])
+            else:
+                p1 = TTTMinimaxPlayer(PLAYER_X, config['minimax_level'])
+                me = p2 = TTTGenomePlayer(PLAYER_O, org)
+                
+            game = TTTGame(p1, p2)
+            board = game.GetBoard()
+            for move in test_game:
+                if not board.TakeTurn(move[0], move[1]):
+                    dprint(DEBUG_ERROR, "game.board.TakeTurn(%d, %s) failed." % (move[0], move[1]))
+                    return False
 
-    board_utility = total_utility / config['games_per_eval']
+            if not game.GameLoop():
+                dprint(DEBUG_ERROR, "game.GameLoop() failed.")
+                return False
+
+            total_utility += me.Utility( game.GetBoard() )
+            total_count += 1.
+
+    board_utility = total_utility / total_count
+    dprint(DEBUG_CHECK, "Org[%03d] Utility = %7.5f = %7.5f / %7.5f" % (int(org.gnome.genome_id), board_utility, total_utility, total_count))
     
     os.chdir(pwd)
 
@@ -342,6 +381,7 @@ def ttt_read_config(config_file):
     return config
     
 def main():
+    make_test_games()
     config = ttt_read_config(neatconfig.configdir + '/ttt.config')
 
     neat.load_neat_params(neatconfig.configdir + "/ttt.ne", True)

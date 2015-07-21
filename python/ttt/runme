@@ -1,3 +1,16 @@
-python ./ttt_experiment.py 2>&1 | tee run.01 | egrep ^INF
+#!/bin/bash
+
+for i in `seq -w 01 99`; do
+    if [ ! -e run.$i ]; then
+	break
+    fi
+done
+
+if [ "$i" -gt 98 ]; then
+    echo "too big $i"
+    exit 1
+fi
+
+python ./ttt_experiment.py 2>&1 | tee run.$i | egrep ^INF
 
 
