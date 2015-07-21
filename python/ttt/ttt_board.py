@@ -22,6 +22,13 @@ class TTTBoard:
         self.winner = PLAYER_N
         return
 
+    def copy(self):
+        b = TTTBoard()
+        b.board = [ m for m in self.board ]
+        b.next_player = self.next_player
+        b.winner = self.winner
+        return b
+
     def GetMarker(self, position):
         if position >= MIN_POSITION and position <= MAX_POSITION:
             return self.board[position]
@@ -68,6 +75,13 @@ class TTTBoard:
         
         return True
 
+    def GetLegalMoves(self):
+        legal = []
+        for position in range(9):
+            if self.GetMarker(position) == PLAYER_N:
+                legal.append(position)
+        return legal
+
     def CheckWin(self):
         wins = [ ( 0, 1, 2 ), ( 3, 4, 5 ), ( 6, 7, 8 ),
                  ( 0, 3, 6 ), ( 1, 4, 7 ), ( 2, 5, 8 ),
@@ -76,6 +90,8 @@ class TTTBoard:
             if self.board[w[0]] != PLAYER_N and self.board[w[0]] == self.board[w[1]] and self.board[w[0]] == self.board[w[2]]:
                 self.winner = self.board[w[0]]
                 return True
+        if len(self.GetLegalMoves()) == 0:
+            self.winner = PLAYER_TIE
         return False
 
     def Display(self):
