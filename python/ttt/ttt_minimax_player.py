@@ -12,7 +12,7 @@ import random
 
 
 INFINITY = 1000000000
-DEPTH_SCALE = 0.999
+DEPTH_PENALTY = - 0.000001
 
 class TTTMinimaxBoard(TTTBoard):
 
@@ -82,7 +82,7 @@ class TTTMinimaxPlayer(TTTPlayer):
             if alpha > beta:
                 break
         print "MAX", depth, len(children), len(moves), alpha, beta, max_value, children
-        return (random.choice(max_moves), DEPTH_SCALE * max_value)
+        return (random.choice(max_moves), DEPTH_PENALTY + max_value)
 
     def Min(self, board, depth, alpha, beta):
         if depth <= 0 or board.GetWinner() != PLAYER_N:
@@ -107,7 +107,7 @@ class TTTMinimaxPlayer(TTTPlayer):
             if alpha > beta:
                 break
         print "MIN", depth, len(children), len(moves), alpha, beta, min_value, children
-        return (random.choice(min_moves), DEPTH_SCALE * min_value)
+        return (random.choice(min_moves), DEPTH_PENALTY + min_value)
 
     def PositionValue(self, position):
         if position in [ 4 ]:
