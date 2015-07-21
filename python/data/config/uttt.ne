@@ -8,8 +8,9 @@ disjoint_coeff 1.0
 excess_coeff 1.0
 mutdiff_coeff 0.4
 # with compat_threshold at 3.0 we frequently have 20-30 species with 150 organisms
-# trying threshold of 5.0 to see if we can get a bit better grouping
-compat_threshold 5.0
+# with 5.0 have 5-10, early on 15 species
+# trying threshold of 4.0 to see what happens
+compat_threshold 4.0
 age_significance 1.0
 survival_thresh 0.20
 mutate_only_prob 0.25

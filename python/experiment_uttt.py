@@ -152,10 +152,7 @@ def uttt_test(config):
 
     return pop
 
-# evaluates the Organism's performance on sample problems
-# bool uttt_evaluate(Organism *org) {
-def uttt_evaluate(org, generation, config):
-    
+def evaluate_fullgame(org, generation, config):
     #
     # Run this network, and get its fitness value
     #
@@ -233,9 +230,86 @@ def uttt_evaluate(org, generation, config):
     errorsum = abs(1.0 - board_utility)
     org.fitness = (2.0 - errorsum) ** 2
     org.error = errorsum
+    
+    return board_utility
+    
+def evaluate_secondmove(org, generation, config):
+    #
+    # Run this network in all 81 possible second move scenarios, and get its fitness value
+    #
+    prog_dir = config['program_directory']
+    pwd = os.getcwd()
+    os.chdir(prog_dir)
+    from uttt_ai import UTTTAI
+    from uttt_data import UTTTData
+    import uttt_data
+
+    results_file = config['results_file']
+    genome_file = config['genome_file']
+    if os.path.exists(genome_file):
+        os.remove(genome_file)
+    org.gnome.print_to_filename(genome_file)
+
+    correct_board = 0.
+    correct_position = 0.
+    total_count = 0.
+    for board in range(9):
+        for position in range(9):
+            data = UTTTData()
+            data.SetState(uttt_data.STATE_SHOW_GAME)
+            data.SetBoardMarker(board, position, uttt_data.PLAYER_X)
+            data.SetNextTurn(position, uttt_data.PLAYER_O)
+            data.SetThisPlayer(uttt_data.PLAYER_O, config['user1'])
+            data.SetOtherPlayer(config['user2'])
+            
+            if os.path.exists(results_file):
+                os.remove(results_file)
+            
+            ai = UTTTAI(data, None, None, None, True, 0,
+                        results_file, genome_file, 'genomelearn', None)
+            move = ai.ChooseMoveGenome()
+            #dprint(DEBUG_CHECK, "next_board = %d, move.board = %d" % (position, move[0]))
+            if move[0] == position:
+                correct_board += 0.9
+                marker = data.GetMarker(move[0], move[1])
+                if marker == uttt_data.PLAYER_N:
+                    correct_position += 0.1
+            
+            total_count += 1.0
+
+    if os.path.exists(results_file):
+        os.remove(results_file)
+    if os.path.exists(genome_file):
+        os.remove(genome_file)
+    os.chdir(pwd)
+
+    genome_utility = (correct_board + correct_position) / total_count
+    #
+    # rank the organism
+    # 0.0 <= genome_utility <= 1.0
+    # 0.0 <= errorsum <= 1.0
+    errorsum = abs(1.0 - genome_utility)
+    org.fitness = (1.0 - errorsum) ** 2
+    org.error = errorsum
+    
+    return genome_utility
+    
+# evaluates the Organism's performance on sample problems
+# bool uttt_evaluate(Organism *org) {
+def uttt_evaluate(org, generation, config):
+
+    if config['evaluate_style'] == 'fullgame':
+        utility = evaluate_fullgame(org, generation, config)
+    elif  config['evaluate_style'] == 'secondmove':
+        utility = evaluate_secondmove(org, generation, config)
+    else:
+        dprint(DEBUG_ERROR, "Unknown evaluate_style:", config['evaluate_style'])
+        org.fitness = 0.0
+        org.error = 999.0
+        
 
     dprint(DEBUG_INFO, "Org[%03d]Epoch[%04d]" % (int(org.gnome.genome_id), int(generation)),
-           " error: %7.5f  fitness: %7.5f  utility: %7.5f" % (errorsum, org.fitness, board_utility))
+           " error: %7.5f  fitness: %7.5f  utility: %7.5f" % (org.error, org.fitness, utility))
 
     if org.fitness >= float(config['win_fitness']):
         org.winner = True
@@ -317,7 +391,8 @@ def uttt_read_config(config_file):
                    'program',
                    'user1', 'password1',
                    'user2', 'password2',
-                   'previous_population_file', ]
+                   'previous_population_file',
+                   'evaluate_style', ]
 
     config = { 'program_directory' : 'uttt',
                'results_file': 'results.txt',
@@ -334,6 +409,7 @@ def uttt_read_config(config_file):
                'seed_with_start_genome': True,
                'seed_with_previous_population': False,
                'previous_population_file': "",
+               'evaluate_style': "secondmove", # secondmove, fullgame
            }
     fin = open(config_file, "r")
     if fin:

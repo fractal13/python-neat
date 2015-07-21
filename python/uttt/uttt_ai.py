@@ -195,10 +195,8 @@ class UTTTAI:
             if self.ai_type == 'genomelearn':
                 if os.path.exists(self.results_file):
                     os.remove(self.results_file)
-            print "ai_type:", self.ai_type
             self.LoadGenome()
         elif self.ai_type == 'minimax':
-            print "ai_type:", self.ai_type
             pass
         else:
             print "Unknown ai type: (%s)" % (self.ai_type, )
@@ -253,9 +251,9 @@ class UTTTAI:
             for p in range(9):
                 m = board.GetMarker(b, p)
                 if m == uttt_data.PLAYER_N:
-                    v = 0.0
+                    v = -1.0
                 elif m == me:
-                    v = 0.0
+                    v = -1.0
                 else:
                     v = 1.0
                 inv.append(v)
@@ -264,11 +262,11 @@ class UTTTAI:
             for p in range(9):
                 m = board.GetMarker(b, p)
                 if m == uttt_data.PLAYER_N:
-                    v = 0.0
+                    v = -1.0
                 elif m == me:
                     v = 1.0
                 else:
-                    v = 0.0
+                    v = -1.0
                 inv.append(v)
 
         # need to load next board here
@@ -277,7 +275,7 @@ class UTTTAI:
             if nb == -1 or b == nb:
                 v = 1.0
             else:
-                v = 0.0
+                v = -1.0
             inv.append(v)
         net.load_sensors(inv)
 
