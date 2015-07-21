@@ -53,8 +53,8 @@ class TTTMinimaxPlayer(TTTPlayer):
         #print "Before:"
         #board.Display()
         move, value = self.Max(TTTMinimaxBoard(board), self.max_depth, alpha + 0, beta + 0)
-        print "After: (Choice: %d)" % (move, )
-        board.Display()
+        #print "After: (Choice: %d)" % (move, )
+        #board.Display()
         #print
         
         return move
@@ -81,7 +81,7 @@ class TTTMinimaxPlayer(TTTPlayer):
                 alpha = value
             if alpha > beta:
                 break
-        print "MAX", depth, len(children), len(moves), alpha, beta, max_value, children
+        #print "MAX", depth, len(children), len(moves), alpha, beta, max_value, children
         return (random.choice(max_moves), DEPTH_PENALTY + max_value)
 
     def Min(self, board, depth, alpha, beta):
@@ -106,7 +106,7 @@ class TTTMinimaxPlayer(TTTPlayer):
                 beta = value
             if alpha > beta:
                 break
-        print "MIN", depth, len(children), len(moves), alpha, beta, min_value, children
+        #print "MIN", depth, len(children), len(moves), alpha, beta, min_value, children
         return (random.choice(min_moves), DEPTH_PENALTY + min_value)
 
     def PositionValue(self, position):

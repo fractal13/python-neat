@@ -63,6 +63,8 @@ class TTTBoard:
             return False
         if self.board[position] != PLAYER_N:
             dprint(DEBUG_ERROR, "Position(%d) already played = %s" % (position, player))
+            if debug.is_set(DEBUG_ERROR):
+                self.Display()
             return False
         if self.next_player != player:
             dprint(DEBUG_ERROR, "Invalid next player(%s), should be (%s)." % (player, self.next_player))
@@ -95,7 +97,9 @@ class TTTBoard:
         return False
 
     def Display(self):
-        s = "+---+---+---+\n"
+        s = ""
+        s += "NP: %s  WIN: %s\n" % (self.next_player, self.winner )
+        s += "+---+---+---+\n"
         for row in range(3):
             s += "|"
             for col in range(3):

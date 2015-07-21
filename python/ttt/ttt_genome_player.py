@@ -71,7 +71,7 @@ class TTTGenomePlayer(TTTPlayer):
                 v = -1.0
             input_values.append(v)
 
-        net.load_sensors(inv)
+        net.load_sensors(input_values)
 
         #
         # process inputs through the network

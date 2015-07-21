@@ -32,20 +32,33 @@ class TTTGame:
             dprint(DEBUG_ERROR, "Unexpected self.board.next_player = %s." % (tmp_player, ))
             m = None
             return False
+
+        if self.board.GetMarker(m) != PLAYER_N:
+            # bad move, just count as a ply, don't try it
+            return True
             
         if not self.board.TakeTurn(m, tmp_player):
             dprint(DEBUG_ERROR, "self.board.TakeTurn(%d, %s) failed." % (m, tmp_player))
+            if debug.is_set(DEBUG_ERROR):
+                if tmp_player == PLAYER_X:
+                    curplayer = self.player_x
+                elif tmp_player == PLAYER_O:
+                    curplayer = self.player_o
+                dprint(DEBUG_ERROR, "%s chose %d." % (curplayer.__class__.__name__, m))
+
             return False
             
         return True
 
 
     def GameLoop(self):
-
-        while not self.GameIsOver():
+        max_ply = 10
+        cur_ply = 1
+        while (not self.GameIsOver()) and (cur_ply <= max_ply):
             if not self.OnePly():
                 dprint(DEBUG_ERROR, "OnePly failed.")
                 return False
+            cur_ply += 1
 
         return True
             
