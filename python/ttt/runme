@@ -1,0 +1,3 @@
+python ./ttt_experiment.py 2>&1 | tee run.01 | egrep ^INF
+
+

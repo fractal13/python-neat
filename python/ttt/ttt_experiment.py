@@ -5,10 +5,15 @@ from neat.debug import dprint
 from neat import debug as debug
 matching_import("DEBUG_.*", debug, globals())
 import neat
-neat.debug.debug_level = DEBUG_ERROR | DEBUG_INFO
+neat.debug.debug_level = DEBUG_ERROR | DEBUG_INFO | DEBUG_CHECK
 from neat import Genome, print_Genome_tofile, Population
 from neat.species import order_species_key
 import neat.neat as neatconfig
+
+from ttt_game import TTTGame
+from ttt_minimax_player import TTTMinimaxPlayer
+from ttt_genome_player import TTTGenomePlayer
+from ttt_board import *
 
 g_found_optimal = False
 
@@ -42,6 +47,7 @@ def ttt_test(config):
         if not iFile:
             dprint(DEBUG_ERROR, "Unable to open starting genome file %s." % (gene_filename, ))
             return pop
+        dprint(DEBUG_INFO, "Opened start genome file %s." % (gene_filename, ))
     
 
         #//Read in the start Genome
@@ -158,11 +164,6 @@ def evaluate_fullgame(org, generation, config):
     prog_dir = config['program_directory']
     pwd = os.getcwd()
     os.chdir(prog_dir)
-
-    from ttt_game import TTTGame
-    from ttt_minimax_player import TTTMinimaxPlayer
-    from ttt_genome_player import TTTGenomePlayer
-    from ttt_board import *
 
     total_utility = 0.0
     for i in range(config['games_per_eval']):
