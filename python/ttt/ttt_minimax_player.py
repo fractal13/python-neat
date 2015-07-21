@@ -108,6 +108,14 @@ class TTTMinimaxPlayer(TTTPlayer):
                 break
         print "MIN", depth, len(children), len(moves), alpha, beta, min_value, children
         return (random.choice(min_moves), DEPTH_SCALE * min_value)
+
+    def PositionValue(self, position):
+        if position in [ 4 ]:
+            return 0.0003
+        elif position in [ 0, 2, 6, 8 ]:
+            return 0.0002
+        elif position in [ 1, 3, 5, 7 ]:
+            return 0.0001
         
     def Evaluate(self, board):
         winner = board.GetWinner()
@@ -140,20 +148,10 @@ class TTTMinimaxPlayer(TTTPlayer):
                     board.next_player = np
 
                 elif marker == self.player:
-                    if position in [ 4 ]:
-                        v += 0.0003
-                    elif position in [ 0, 2, 6, 8 ]:
-                        v += 0.0002
-                    elif position in [ 1, 3, 5, 7 ]:
-                        v += 0.0001
+                    v += self.PositionValue(position)
                         
                 elif marker == self.other:
-                    if position in [ 4 ]:
-                        v -= 0.0003
-                    elif position in [ 0, 2, 6, 8 ]:
-                        v -= 0.0002
-                    elif position in [ 1, 3, 5, 7 ]:
-                        v -= 0.0001
+                    v -= self.PositionValue(position)
                     
         return v
 
