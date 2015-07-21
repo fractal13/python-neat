@@ -71,7 +71,7 @@ def main():
     p2 = TTTRandomPlayer( PLAYER_O )
     g = TTTGame(p1, p2)
     if not g.GameLoop():
-        dprint(DEBUG_ERROR, "g.GameLoop() faild.")
+        dprint(DEBUG_ERROR, "g.GameLoop() failed.")
         return False
     b = g.GetBoard()
     b.Display()
