@@ -59,7 +59,7 @@ class TTTGenomePlayer(TTTPlayer):
             if marker == self.other:
                 v = 1.0
             else:
-                v = -1.0
+                v = 0.0
             input_values.append(v)
 
         # Me
@@ -68,7 +68,7 @@ class TTTGenomePlayer(TTTPlayer):
             if marker == self.player:
                 v = 1.0
             else:
-                v = -1.0
+                v = 0.0
             input_values.append(v)
 
         net.load_sensors(input_values)
