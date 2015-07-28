@@ -7,7 +7,8 @@ recur_prob 0.00
 disjoint_coeff 1.0
 excess_coeff 1.0
 mutdiff_coeff 0.4
-compat_threshold 3.0
+#compat_threshold 3.0 # produced 30-35 species with 150 organisms
+compat_threshold 4.0
 age_significance 1.0
 survival_thresh 0.20
 mutate_only_prob 0.25
